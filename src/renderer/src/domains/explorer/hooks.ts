@@ -1,9 +1,12 @@
-import { useAtom, useAtomValue } from 'jotai'
-import { useCallback, useEffect } from 'react'
 import type { DocumentRecord, QuerySpec } from '@shared/types/firestore'
+import { type PrimitiveAtom, useAtom, useAtomValue } from 'jotai'
+import { useCallback, useEffect, useState } from 'react'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { collectionsAtom, documentsAtom, documentsVersionAtom } from './atoms'
+
+/** Number of documents fetched per page in the Browse tab. */
+const PAGE_SIZE = 50
 
 /**
  * Load collection ids for a connection, refreshing when it changes.
@@ -26,37 +29,63 @@ export function useCollections(connectionId: string | null) {
 }
 
 /**
- * Load documents for the selected collection, refreshing on changes.
+ * Load documents for the selected collection with offset-based "load more" pagination.
+ * The `version` atom is included in `refresh`'s identity so mutations trigger an automatic reload.
  *
  * @param connectionId - Active connection id, or `null`.
  * @param collectionPath - Selected collection path, or `null`.
- * @returns Documents plus loading/error state and a refresher.
+ * @returns Documents, loading/error state, a full refresher and a `loadMore` action.
  */
 export function useDocuments(connectionId: string | null, collectionPath: string | null) {
   const [documents, setDocuments] = useAtom(documentsAtom)
   const version = useAtomValue(documentsVersionAtom)
   const { error, busy, run } = useAsync()
+  const [hasMore, setHasMore] = useState(true)
+
+  // `version` is intentionally captured so that when mutations bump it, this
+  // callback gets a new identity, which re-triggers the effect below.
   const refresh = useCallback(() => {
+    void version
     if (!connectionId || !collectionPath) return undefined
-    return run(async () =>
-      setDocuments(await unwrap(api.listDocuments(connectionId, collectionPath)))
-    )
-  }, [connectionId, collectionPath, run, setDocuments])
+    return run(async () => {
+      const docs = await unwrap(api.listDocuments(connectionId, collectionPath, PAGE_SIZE))
+      setDocuments(docs)
+      setHasMore(docs.length >= PAGE_SIZE)
+    })
+  }, [connectionId, collectionPath, run, setDocuments, version])
+
+  const loadMore = useCallback(() => {
+    if (!connectionId || !collectionPath) return undefined
+    return run(async () => {
+      const next = await unwrap(
+        api.listDocuments(connectionId, collectionPath, PAGE_SIZE, documents.length)
+      )
+      setDocuments((prev) => [...prev, ...next])
+      setHasMore(next.length >= PAGE_SIZE)
+    })
+  }, [connectionId, collectionPath, documents.length, run, setDocuments])
+
   useEffect(() => {
     setDocuments([])
+    setHasMore(true)
     void refresh()
-  }, [refresh, setDocuments, version])
-  return { documents, error, busy, refresh }
+  }, [refresh, setDocuments])
+
+  return { documents, error, busy, refresh, loadMore, hasMore }
 }
 
 /**
- * Run an AI- or hand-authored query and load the results into state.
+ * Run an AI- or hand-authored query and load the results into a target atom.
  *
  * @param connectionId - Active connection id, or `null`.
+ * @param target - Jotai atom to write results into (defaults to the Browse atom).
  * @returns A `runSpec` action plus loading/error state.
  */
-export function useQueryRunner(connectionId: string | null) {
-  const setDocuments = useAtom(documentsAtom)[1]
+export function useQueryRunner(
+  connectionId: string | null,
+  target: PrimitiveAtom<DocumentRecord[]> = documentsAtom
+) {
+  const setDocuments = useAtom(target)[1]
   const { error, busy, run } = useAsync()
   const runSpec = useCallback(
     (spec: QuerySpec): Promise<DocumentRecord[] | undefined> => {

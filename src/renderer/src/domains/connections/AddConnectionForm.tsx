@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
 import { Button, ErrorBanner } from '../../components/ui'
 import { useConnectionActions, useRefreshConnections } from './hooks'
 
@@ -40,14 +40,14 @@ export function AddConnectionForm(): ReactNode {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-2 border-t border-slate-200 p-3">
+    <form onSubmit={onSubmit} className="space-y-2 border-t border-slate-200 dark:border-slate-700 p-3">
       <input
-        className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+        className="w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 px-2 py-1 text-sm"
         placeholder="Connection name"
         value={name}
         onChange={(event) => setName(event.target.value)}
       />
-      <input type="file" accept="application/json,.json" onChange={onFile} className="text-xs" />
+      <input type="file" accept="application/json,.json" onChange={onFile} className="text-xs dark:text-slate-400" />
       <ErrorBanner message={error} />
       <Button type="submit" disabled={busy || !name.trim() || !json}>
         Add connection

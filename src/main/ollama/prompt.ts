@@ -13,7 +13,11 @@ const SYSTEM_INSTRUCTIONS = [
   'You are a Firestore query assistant.',
   'Translate the user request into a single JSON object matching this schema:',
   '{"collectionPath": string, "filters": [{"field": string, "operator": string, "value": any}],',
-  '"order": {"field": string, "direction": "asc"|"desc"}|null, "limit": number}.',
+  '"order": {"field": string, "direction": "asc"|"desc"}|null, "limit": number,',
+  '"aggregate": "count"|"sum"|"avg"|null, "aggregateField": string|null}.',
+  'Use "aggregate":"count" when the user asks how many documents exist (e.g. "how many", "count", "ile").',
+  'Use "aggregate":"sum" + "aggregateField":"fieldName" to sum a numeric field (e.g. "total", "suma").',
+  'Use "aggregate":"avg" + "aggregateField":"fieldName" to average a numeric field (e.g. "average", "mean", "średnia").',
   'Use only collections and fields from the provided database schema.',
   'Valid operators: ==, !=, <, <=, >, >=, array-contains, in, array-contains-any.',
   'Respond with JSON only, no prose.'

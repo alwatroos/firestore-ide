@@ -40,3 +40,28 @@ export function useGenerate() {
   )
   return { generate, error, busy }
 }
+
+/**
+ * Streaming variant: calls `onChunk` for each token then resolves with the full result.
+ *
+ * @returns A `generate` action that streams tokens, plus busy/error state.
+ */
+export function useGenerateStream() {
+  const { error, busy, run } = useAsync()
+  const generate = useCallback(
+    (input: GenerateQueryInput, onChunk: (text: string) => void): Promise<GeneratedQuery | undefined> =>
+      run(
+        () =>
+          new Promise<GeneratedQuery>((resolve, reject) => {
+            const cleanup = api.generateQueryStream(
+              input,
+              onChunk,
+              (result) => { cleanup(); resolve(result) },
+              (errMsg) => { cleanup(); reject(new Error(errMsg)) }
+            )
+          })
+      ),
+    [run]
+  )
+  return { generate, error, busy }
+}

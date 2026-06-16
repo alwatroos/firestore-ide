@@ -25,7 +25,8 @@ export interface FirestoreIdeApi {
   listDocuments: (
     connectionId: string,
     collectionPath: string,
-    limit?: number
+    limit?: number,
+    offset?: number
   ) => Promise<Result<DocumentRecord[]>>
   /** Run a declarative query. */
   runQuery: (connectionId: string, spec: QuerySpec) => Promise<Result<DocumentRecord[]>>
@@ -37,8 +38,20 @@ export interface FirestoreIdeApi {
   getSchema: (connectionId: string) => Promise<Result<DatabaseSchema>>
   /** List models available on an Ollama host. */
   listModels: (host: string) => Promise<Result<OllamaModel[]>>
+  /** Execute a user-provided JS snippet against Firestore (main-process sandbox). */
+  runJsQuery: (connectionId: string, code: string) => Promise<Result<DocumentRecord[]>>
   /** Generate a query from natural language grounded in the DB schema. */
   generateQuery: (input: GenerateQueryInput) => Promise<Result<GeneratedQuery>>
+  /**
+   * Stream a query generation token-by-token.
+   * Returns a cleanup function that removes all IPC listeners.
+   */
+  generateQueryStream: (
+    input: GenerateQueryInput,
+    onChunk: (text: string) => void,
+    onDone: (result: GeneratedQuery) => void,
+    onError: (error: string) => void
+  ) => () => void
   /** Read persisted application settings. */
   getSettings: () => Promise<Result<AppSettings>>
   /** Persist application settings. */

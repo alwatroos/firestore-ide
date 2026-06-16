@@ -1,16 +1,17 @@
-import type { DocumentRecord, QuerySpec } from '@shared/types/firestore'
 import { IPC } from '@shared/ipc/channels'
+import type { DocumentRecord, QuerySpec } from '@shared/types/firestore'
 import { ok } from '@shared/utils/result'
 import { handle } from '../core/ipc'
+import { loadSettings } from '../settings/store'
+import { inferSchema } from './schema'
 import {
   deleteDocument,
   listCollections,
   listDocuments,
+  runJsQuery,
   runQuery,
   saveDocument
 } from './service'
-import { inferSchema } from './schema'
-import { loadSettings } from '../settings/store'
 
 /**
  * Register all Firestore-domain IPC handlers.
@@ -21,11 +22,14 @@ export function registerFirestoreIpc(): void {
   handle(IPC.firestoreListCollections, async (id: string, parentPath?: string) =>
     ok(await listCollections(id, parentPath))
   )
-  handle(IPC.firestoreListDocuments, async (id: string, path: string, limit?: number) =>
-    ok(await listDocuments(id, path, limit))
+  handle(IPC.firestoreListDocuments, async (id: string, path: string, limit?: number, offset?: number) =>
+    ok(await listDocuments(id, path, limit, offset))
   )
   handle(IPC.firestoreRunQuery, async (id: string, spec: QuerySpec) =>
     ok(await runQuery(id, spec))
+  )
+  handle(IPC.firestoreRunJsQuery, async (id: string, code: string) =>
+    ok(await runJsQuery(id, code))
   )
   handle(IPC.firestoreSaveDocument, async (id: string, doc: DocumentRecord) =>
     ok(await saveDocument(id, doc))

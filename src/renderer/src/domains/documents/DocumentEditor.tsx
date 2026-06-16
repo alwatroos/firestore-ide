@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai'
-import { useEffect, useState, type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Button, Empty, ErrorBanner } from '../../components/ui'
 import { parseJsonObject } from '../../lib/json'
 import { selectedDocumentAtom } from './atoms'
@@ -56,20 +56,23 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
 
   return (
     <section className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 px-4 py-2">
-        <code className="truncate text-xs text-slate-500">{selected.path}</code>
-        <div className="flex gap-2">
+      <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-2">
+        <code className="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">{selected.path}</code>
+        <div className="ml-2 flex shrink-0 gap-2">
           <Button onClick={() => void onSave()} disabled={busy}>
             Save
           </Button>
           <Button variant="danger" onClick={() => void onDelete()} disabled={busy}>
             Delete
           </Button>
+          <Button variant="ghost" onClick={() => setSelected(null)} title="Close editor" aria-label="Close editor">
+            ✕
+          </Button>
         </div>
       </header>
       <textarea
         spellCheck={false}
-        className="flex-1 resize-none p-4 font-mono text-xs outline-none"
+        className="flex-1 resize-none bg-white dark:bg-slate-950 dark:text-slate-300 p-4 font-mono text-xs outline-none"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
       />

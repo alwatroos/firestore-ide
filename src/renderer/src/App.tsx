@@ -1,15 +1,57 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { useCallback, useState, type ReactNode } from 'react'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import { ResizableSplit } from './components/ResizableSplit'
 import { Sidebar } from './components/Sidebar'
 import { AiQueryPanel } from './domains/ai/AiQueryPanel'
 import { activeConnectionAtom } from './domains/connections/atoms'
+import { selectedDocumentAtom } from './domains/documents/atoms'
 import { DocumentEditor } from './domains/documents/DocumentEditor'
 import { documentsVersionAtom } from './domains/explorer/atoms'
-import { DocumentTable } from './domains/explorer/DocumentTable'
+import { ExplorerPane } from './domains/explorer/ExplorerPane'
+import { settingsAtom } from './domains/settings/atoms'
 import { SettingsDialog } from './domains/settings/SettingsDialog'
 
+/** Props for {@link MainContent}. */
+interface MainContentProps {
+  /** Active connection id passed to the document editor. */
+  connectionId: string | null
+  /** Invoked after a successful save or delete. */
+  onSaved: () => void
+  /** Opens the settings dialog from the AI panel. */
+  onOpenSettings: () => void
+}
+
 /**
- * Application shell: sidebar, document table, editor and AI assistant.
+ * Central content area: full-width explorer when no document is open,
+ * resizable split between explorer and editor when one is selected.
+ *
+ * @param props - Connection id, save callback and settings opener.
+ * @returns The rendered content area.
+ */
+function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps): ReactNode {
+  const selectedDocument = useAtomValue(selectedDocumentAtom)
+  const editor = <DocumentEditor connectionId={connectionId} onSaved={onSaved} />
+
+  if (!selectedDocument) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ExplorerPane />
+        <AiQueryPanel onOpenSettings={onOpenSettings} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <ResizableSplit left={<ExplorerPane />} right={editor} />
+      <AiQueryPanel onOpenSettings={onOpenSettings} />
+    </div>
+  )
+}
+
+/**
+ * Application shell: sidebar and the main content area.
+ * Manages the `.dark` class on `<html>` based on the persisted theme setting.
  *
  * @returns The rendered application.
  */
@@ -17,21 +59,36 @@ export function App(): ReactNode {
   const active = useAtomValue(activeConnectionAtom)
   const bumpVersion = useSetAtom(documentsVersionAtom)
   const [showSettings, setShowSettings] = useState(false)
-  const onSaved = useCallback(() => bumpVersion((value) => value + 1), [bumpVersion])
+  const onSaved = useCallback(() => bumpVersion((v) => v + 1), [bumpVersion])
+  const settings = useAtomValue(settingsAtom)
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (settings.theme === 'dark') {
+      root.classList.add('dark')
+      return
+    }
+    if (settings.theme === 'light') {
+      root.classList.remove('dark')
+      return
+    }
+    // system: follow prefers-color-scheme and keep in sync
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    root.classList.toggle('dark', mq.matches)
+    const handler = (e: MediaQueryListEvent) => root.classList.toggle('dark', e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [settings.theme])
 
   return (
-    <div className="flex h-screen text-slate-800">
+    <div className="flex h-screen text-slate-800 dark:bg-slate-950 dark:text-slate-200">
       <Sidebar onOpenSettings={() => setShowSettings(true)} />
-      <main className="flex min-w-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1">
-          <div className="w-1/2 border-r border-slate-200">
-            <DocumentTable />
-          </div>
-          <div className="w-1/2">
-            <DocumentEditor connectionId={active?.id ?? null} onSaved={onSaved} />
-          </div>
-        </div>
-        <AiQueryPanel />
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <MainContent
+          connectionId={active?.id ?? null}
+          onSaved={onSaved}
+          onOpenSettings={() => setShowSettings(true)}
+        />
       </main>
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
     </div>

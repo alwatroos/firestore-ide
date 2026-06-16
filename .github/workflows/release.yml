@@ -83,6 +83,12 @@ jobs:
           - os: macos-latest
             artifacts: dist/*.dmg
     runs-on: ${{ matrix.os }}
+    env:
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v4
@@ -101,11 +107,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Import macOS signing certificate
+        # env.CSC_LINK is set at job level from secrets.CSC_LINK; empty when secret is unset.
+        if: runner.os == 'macOS' && env.CSC_LINK != ''
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASS=$(openssl rand -hex 16)
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          echo "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/cert.p12"
+
       - name: Build installers
         run: pnpm dist
         env:
-          # Build unsigned artifacts; signing certs are not configured in CI.
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          # Suppress auto-discovery on Linux/Windows; on macOS the cert is already in keychain.
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ runner.os != 'macOS' }}
 
       - name: Upload installers as workflow artifacts
         uses: actions/upload-artifact@v4

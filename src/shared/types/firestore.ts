@@ -28,17 +28,30 @@ export interface QueryOrder {
   direction: 'asc' | 'desc'
 }
 
+/** Supported aggregation operations for a query. */
+export type QueryAggregate = 'count' | 'sum' | 'avg'
+
 /** Declarative query specification evaluated in the main process. */
 export interface QuerySpec {
   /** Collection (or sub-collection) path to query. */
   collectionPath: string
   /** Zero or more `where` filters. */
   filters?: QueryFilter[]
-  /** Optional ordering clause. */
+  /** Optional ordering clause (ignored for aggregations). */
   order?: QueryOrder
-  /** Maximum number of documents to return. */
+  /** Maximum number of documents to return (ignored for aggregations). */
   limit?: number
+  /** When set, returns an aggregation result instead of documents. */
+  aggregate?: QueryAggregate
+  /** Field to aggregate — required when `aggregate` is `sum` or `avg`. */
+  aggregateField?: string
 }
+
+/**
+ * Sentinel document id returned by count aggregation queries.
+ * Consumers should check `doc.id === COUNT_SENTINEL_ID` to detect this case.
+ */
+export const COUNT_SENTINEL_ID = '__count__'
 
 /** A Firestore document flattened for display and editing. */
 export interface DocumentRecord {

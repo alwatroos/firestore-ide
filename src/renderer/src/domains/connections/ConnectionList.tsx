@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import type { ConnectionMeta } from '@shared/types/connection'
+import type { ReactNode } from 'react'
 import { Empty, ErrorBanner } from '../../components/ui'
 import { useConnectionActions, useConnections } from './hooks'
 
@@ -22,14 +22,16 @@ interface RowProps {
  * @returns The rendered row.
  */
 function ConnectionRow({ connection, active, onSelect, onRemove }: RowProps): ReactNode {
-  const activeClass = active ? 'bg-blue-50 border-blue-300' : 'border-transparent hover:bg-slate-100'
+  const activeClass = active
+    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700'
+    : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'
   return (
     <li className={`flex items-center justify-between rounded border px-2 py-1.5 ${activeClass}`}>
-      <button className="min-w-0 flex-1 text-left" onClick={onSelect}>
-        <div className="truncate text-sm font-medium text-slate-800">{connection.name}</div>
-        <div className="truncate text-xs text-slate-500">{connection.projectId}</div>
+      <button type="button" className="min-w-0 flex-1 text-left" onClick={onSelect}>
+        <div className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{connection.name}</div>
+        <div className="truncate text-xs text-slate-500 dark:text-slate-400">{connection.projectId}</div>
       </button>
-      <button className="px-1 text-xs text-red-500 hover:text-red-700" onClick={onRemove}>
+      <button type="button" className="px-1 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400" onClick={onRemove}>
         ✕
       </button>
     </li>

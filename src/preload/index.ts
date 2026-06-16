@@ -1,6 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC } from '@shared/ipc/channels'
 import type { FirestoreIdeApi } from '@shared/types/api'
+import type { GeneratedQuery } from '@shared/types/ollama'
 
 /**
  * The renderer-facing API. Every method is a thin `ipcRenderer.invoke` wrapper;
@@ -13,14 +14,36 @@ const api: FirestoreIdeApi = {
   testConnection: (id) => ipcRenderer.invoke(IPC.connectionsTest, id),
   listCollections: (id, parentPath) =>
     ipcRenderer.invoke(IPC.firestoreListCollections, id, parentPath),
-  listDocuments: (id, path, limit) =>
-    ipcRenderer.invoke(IPC.firestoreListDocuments, id, path, limit),
+  listDocuments: (id, path, limit, offset) =>
+    ipcRenderer.invoke(IPC.firestoreListDocuments, id, path, limit, offset),
   runQuery: (id, spec) => ipcRenderer.invoke(IPC.firestoreRunQuery, id, spec),
+  runJsQuery: (id, code) => ipcRenderer.invoke(IPC.firestoreRunJsQuery, id, code),
   saveDocument: (id, doc) => ipcRenderer.invoke(IPC.firestoreSaveDocument, id, doc),
   deleteDocument: (id, path) => ipcRenderer.invoke(IPC.firestoreDeleteDocument, id, path),
   getSchema: (id) => ipcRenderer.invoke(IPC.firestoreGetSchema, id),
   listModels: (host) => ipcRenderer.invoke(IPC.ollamaListModels, host),
   generateQuery: (input) => ipcRenderer.invoke(IPC.ollamaGenerateQuery, input),
+  generateQueryStream: (input, onChunk, onDone, onError) => {
+    let active = true
+    function chunkHandler(_: IpcRendererEvent, text: string) {
+      if (active) onChunk(text)
+    }
+    function cleanup() {
+      active = false
+      ipcRenderer.removeListener(IPC.ollamaStreamChunk, chunkHandler)
+    }
+    ipcRenderer.on(IPC.ollamaStreamChunk, chunkHandler)
+    ipcRenderer.once(IPC.ollamaStreamDone, (_: IpcRendererEvent, result: GeneratedQuery) => {
+      cleanup()
+      onDone(result)
+    })
+    ipcRenderer.once(IPC.ollamaStreamError, (_: IpcRendererEvent, error: string) => {
+      cleanup()
+      onError(error)
+    })
+    ipcRenderer.send(IPC.ollamaGenerateQueryStream, input)
+    return cleanup
+  },
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
   saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings)
 }

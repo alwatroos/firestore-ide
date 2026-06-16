@@ -1,4 +1,4 @@
-appId: com.firestoreide.app
+appId: com.alwatroos.firestoreide
 productName: Firestore IDE
 artifactName: ${name}-${version}-${os}-${arch}.${ext}
 directories:
@@ -8,11 +8,22 @@ files:
   - out/**/*
   - package.json
 publish: null
+
+# Called after signing (macOS only). Notarizes the .app with Apple when
+# APPLE_ID / APPLE_ID_PASS / APPLE_TEAM_ID env vars are present.
+afterSign: build/notarize.mjs
+
 linux:
   target: [AppImage]
   category: Development
+
 mac:
   target: [dmg]
   category: public.app-category.developer-tools
+  # Hardened runtime is required by Apple for notarization.
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
 win:
   target: [nsis]

@@ -5,7 +5,7 @@ type Variant = 'primary' | 'ghost' | 'danger'
 
 const VARIANT_CLASS: Record<Variant, string> = {
   primary: 'bg-blue-600 hover:bg-blue-500 text-white',
-  ghost: 'bg-transparent hover:bg-slate-200 text-slate-700',
+  ghost: 'bg-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300',
   danger: 'bg-red-600 hover:bg-red-500 text-white'
 }
 
@@ -34,7 +34,11 @@ export function Button({ variant = 'primary', className = '', ...rest }: ButtonP
  */
 export function ErrorBanner({ message }: { message: string | null }): ReactNode {
   if (!message) return null
-  return <div className="rounded bg-red-100 px-3 py-2 text-sm text-red-700">{message}</div>
+  return (
+    <div className="rounded bg-red-100 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+      {message}
+    </div>
+  )
 }
 
 /**
@@ -44,5 +48,5 @@ export function ErrorBanner({ message }: { message: string | null }): ReactNode 
  * @returns The rendered placeholder.
  */
 export function Empty({ text }: { text: string }): ReactNode {
-  return <div className="p-6 text-center text-sm text-slate-400">{text}</div>
+  return <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">{text}</div>
 }

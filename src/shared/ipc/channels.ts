@@ -10,11 +10,16 @@ export const IPC = {
   firestoreListCollections: 'firestore:listCollections',
   firestoreListDocuments: 'firestore:listDocuments',
   firestoreRunQuery: 'firestore:runQuery',
+  firestoreRunJsQuery: 'firestore:runJsQuery',
   firestoreSaveDocument: 'firestore:saveDocument',
   firestoreDeleteDocument: 'firestore:deleteDocument',
   firestoreGetSchema: 'firestore:getSchema',
   ollamaListModels: 'ollama:listModels',
   ollamaGenerateQuery: 'ollama:generateQuery',
+  ollamaGenerateQueryStream: 'ollama:generateQueryStream',
+  ollamaStreamChunk: 'ollama:streamChunk',
+  ollamaStreamDone: 'ollama:streamDone',
+  ollamaStreamError: 'ollama:streamError',
   settingsGet: 'settings:get',
   settingsSave: 'settings:save'
 } as const

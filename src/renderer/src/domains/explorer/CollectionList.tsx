@@ -30,7 +30,9 @@ export function CollectionList(): ReactNode {
                 setDocument(null)
               }}
               className={`w-full truncate rounded px-2 py-1 text-left text-sm ${
-                name === selected ? 'bg-blue-100 text-blue-800' : 'hover:bg-slate-100'
+                name === selected
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300'
               }`}
             >
               {name}
