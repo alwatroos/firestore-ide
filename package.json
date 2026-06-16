@@ -1,6 +1,6 @@
 {
   "name": "firestore-ide",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Desktop IDE for Google Cloud Firestore with Ollama-powered query generation.",
   "author": "firestore-ide",
   "license": "MIT",
