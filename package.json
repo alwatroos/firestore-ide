@@ -1,6 +1,6 @@
 {
   "name": "firestore-ide",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Desktop IDE for Google Cloud Firestore with Ollama-powered query generation.",
   "author": "firestore-ide",
   "license": "MIT",
@@ -50,6 +50,11 @@
     "vitest": "4.1.9"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["electron", "esbuild", "protobufjs", "@firebase/util"]
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "protobufjs",
+      "@firebase/util"
+    ]
   }
 }
