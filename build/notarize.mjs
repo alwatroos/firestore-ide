@@ -17,10 +17,12 @@ export default async function notarizing(context) {
 
   if (electronPlatformName !== 'darwin') return;
 
-  const { APPLE_ID, APPLE_ID_PASS, APPLE_TEAM_ID } = process.env;
+  const { APPLE_ID, APPLE_ID_PASS, APPLE_TEAM_ID, CSC_LINK } = process.env;
 
-  if (!APPLE_ID || !APPLE_ID_PASS || !APPLE_TEAM_ID) {
-    console.log('Skipping notarization — APPLE_ID / APPLE_ID_PASS / APPLE_TEAM_ID not set.');
+  // Notarization requires a proper Developer ID signature. Skip if any
+  // credential is missing — unsigned/ad-hoc builds cannot be notarized.
+  if (!CSC_LINK || !APPLE_ID || !APPLE_ID_PASS || !APPLE_TEAM_ID) {
+    console.log('Skipping notarization — signing credentials not fully set.');
     return;
   }
 

@@ -43,10 +43,18 @@ jobs:
         run: |
           message=$(git log -1 --pretty=%B)
           level=patch
-          case "$message" in
-            *'#major'*) level=major ;;
-            *'#minor'*) level=minor ;;
-          esac
+          # Explicit overrides take highest priority.
+          if echo "$message" | grep -q '#major'; then
+            level=major
+          elif echo "$message" | grep -q '#minor'; then
+            level=minor
+          # Breaking change (BREAKING CHANGE footer or ! after type) → major.
+          elif echo "$message" | grep -qE '(^BREAKING CHANGE|^[a-z]+(\([^)]+\))?!)'; then
+            level=major
+          # feat → minor; fix/chore/docs/etc. stay at default patch.
+          elif echo "$message" | grep -qE '^feat(\([^)]+\))?:'; then
+            level=minor
+          fi
           echo "Bumping with level: $level"
           new=$(npm version "$level" --no-git-tag-version)
           echo "tag=${new}" >> "$GITHUB_OUTPUT"
@@ -78,10 +86,17 @@ jobs:
         include:
           - os: ubuntu-latest
             artifacts: dist/*.AppImage
+            # CSC_IDENTITY_AUTO_DISCOVERY=false → skip signing on Linux
+            csc_auto_discovery: 'false'
           - os: windows-latest
             artifacts: dist/*.exe
+            # CSC_IDENTITY_AUTO_DISCOVERY=false → skip signing on Windows
+            csc_auto_discovery: 'false'
           - os: macos-latest
             artifacts: dist/*.dmg
+            # CSC_IDENTITY_AUTO_DISCOVERY=true → electron-builder reads CSC_LINK from env
+            # and signs; skips gracefully if CSC_LINK is absent (no cert configured yet).
+            csc_auto_discovery: 'true'
     runs-on: ${{ matrix.os }}
     env:
       CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -107,26 +122,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Import macOS signing certificate
-        # env.CSC_LINK is set at job level from secrets.CSC_LINK; empty when secret is unset.
-        if: runner.os == 'macOS' && env.CSC_LINK != ''
-        run: |
-          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
-          KEYCHAIN_PASS=$(openssl rand -hex 16)
-          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
-          echo "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
-          rm "$RUNNER_TEMP/cert.p12"
-
       - name: Build installers
         run: pnpm dist
         env:
-          # Suppress auto-discovery on Linux/Windows; on macOS the cert is already in keychain.
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ runner.os != 'macOS' }}
+          # false on Linux/Windows (skip signing), true on macOS (use CSC_LINK from job env).
+          # When CSC_LINK is absent on macOS, electron-builder finds no cert and skips signing.
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ matrix.csc_auto_discovery }}
 
       - name: Upload installers as workflow artifacts
         uses: actions/upload-artifact@v4
