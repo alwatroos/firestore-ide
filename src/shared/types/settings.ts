@@ -3,7 +3,7 @@ export type Theme = 'system' | 'light' | 'dark'
 
 /** User-configurable application settings. */
 export interface AppSettings {
-  /** Base URL of the Ollama host (e.g. `http://localhost:11434`). */
+  /** Base URL of the Ollama host (e.g. `http://127.0.0.1:11434`). */
   ollamaHost: string
   /** Last-used model name, if any. */
   defaultModel: string | null
@@ -15,7 +15,7 @@ export interface AppSettings {
 
 /** Default settings applied on first launch. */
 export const DEFAULT_SETTINGS: AppSettings = {
-  ollamaHost: 'http://localhost:11434',
+  ollamaHost: 'http://127.0.0.1:11434',
   defaultModel: null,
   schemaSampleSize: 25,
   theme: 'system'
