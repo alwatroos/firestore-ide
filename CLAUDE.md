@@ -21,7 +21,10 @@ Ollama**, grounded in the connected database's inferred schema.
 - **ollama** client for model listing and JSON-constrained chat completion.
 - **Tailwind CSS 4** via `@tailwindcss/vite`.
 - **vitest 4** + **happy-dom** for unit tests.
-- Package manager: **pnpm**.
+- Package manager: **pnpm**, pinned via the `packageManager` field and activated
+  with **Corepack** (`corepack enable`). CI uses Corepack rather than a separate
+  pnpm install action.
+- **husky 9** git hooks; a `commit-msg` hook enforces Conventional Commits.
 
 ## Commands
 
@@ -98,6 +101,15 @@ stack traces or secrets — never cross the process boundary. Add a channel by:
 - **No SSR.** The Electron renderer is a client-only SPA, so the SSR/hydration
   guidance does not apply here; component splitting and jotai hydration-friendly
   atoms are still used.
+
+## Git hooks (husky)
+
+`pnpm install` runs `prepare` → `husky`, installing hooks from `.husky/`. The
+`commit-msg` hook runs `scripts/verify-commit-msg.mjs`, which rejects any commit
+whose subject is not a Conventional Commit (`feat`, `fix`, `chore`, `docs`,
+`style`, `refactor`, `perf`, `test`, `build`, `ci`, `revert`), e.g.
+`feat(explorer): add filtering`. Merge/revert/fixup commits are exempt. Bypass in
+emergencies with `git commit --no-verify`.
 
 ## Testing
 

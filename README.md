@@ -26,10 +26,18 @@ React 19 and TypeScript — with natural-language query generation via Ollama.
 
 ## Getting started
 
+This project pins pnpm via the `packageManager` field; enable Corepack once so
+the right version is used automatically:
+
 ```bash
+corepack enable
 pnpm install
 pnpm dev
 ```
+
+`pnpm install` also sets up husky git hooks. Commits must follow
+[Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`,
+`chore:`, …) — enforced by a `commit-msg` hook.
 
 Add a connection from the sidebar by selecting your service account JSON file,
 pick a collection to browse documents, click a row to edit it, or use the AI
