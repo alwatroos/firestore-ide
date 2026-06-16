@@ -9,10 +9,6 @@ files:
   - package.json
 publish: null
 
-# Called after signing (macOS only). Notarizes the .app with Apple when
-# APPLE_ID / APPLE_ID_PASS / APPLE_TEAM_ID env vars are present.
-afterSign: build/notarize.mjs
-
 linux:
   target: [AppImage]
   category: Development

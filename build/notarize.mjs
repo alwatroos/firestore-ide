@@ -17,7 +17,7 @@ export default async function notarizing(context) {
 
   if (electronPlatformName !== 'darwin') return;
 
-  const { APPLE_ID, APPLE_ID_PASS, APPLE_TEAM_ID, CSC_LINK } = process.env;
+  const { APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD: APPLE_ID_PASS, APPLE_TEAM_ID, CSC_LINK } = process.env;
 
   // Notarization requires a proper Developer ID signature. Skip if any
   // credential is missing — unsigned/ad-hoc builds cannot be notarized.
