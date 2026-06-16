@@ -1,0 +1,121 @@
+name: Release
+
+# Versioning + bundling pipeline. On every merge/push to `main` it bumps the
+# version in package.json, creates a matching git tag and GitHub Release, then
+# builds installers for Linux/Windows/macOS and attaches them to the release so
+# executables can be downloaded directly from GitHub.
+#
+# Bump level defaults to `patch`; include `#minor` or `#major` anywhere in the
+# merge commit message to bump those instead.
+
+on:
+  push:
+    branches: [main]
+
+# Avoid overlapping releases racing on the same branch/tag.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    name: Bump version & tag
+    runs-on: ubuntu-latest
+    # Skip the run triggered by our own release commit.
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Determine bump level and update package.json
+        id: bump
+        run: |
+          message=$(git log -1 --pretty=%B)
+          level=patch
+          case "$message" in
+            *'#major'*) level=major ;;
+            *'#minor'*) level=minor ;;
+          esac
+          echo "Bumping with level: $level"
+          new=$(npm version "$level" --no-git-tag-version)
+          echo "tag=${new}" >> "$GITHUB_OUTPUT"
+          echo "version=${new#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit, tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(release): ${{ steps.bump.outputs.tag }} [skip ci]"
+          git tag "${{ steps.bump.outputs.tag }}"
+          git push origin HEAD:main
+          git push origin "${{ steps.bump.outputs.tag }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.tag }}
+          name: ${{ steps.bump.outputs.tag }}
+          generate_release_notes: true
+
+  build:
+    name: Build ${{ matrix.os }}
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifacts: dist/*.AppImage
+          - os: windows-latest
+            artifacts: dist/*.exe
+          - os: macos-latest
+            artifacts: dist/*.dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build installers
+        run: pnpm dist
+        env:
+          # Build unsigned artifacts; signing certs are not configured in CI.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload installers as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+
+      - name: Attach installers to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          files: ${{ matrix.artifacts }}

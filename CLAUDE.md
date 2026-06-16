@@ -103,3 +103,24 @@ stack traces or secrets — never cross the process boundary. Add a channel by:
 
 `vitest` with `happy-dom`. Tests sit next to the code as `*.test.ts`. Favour
 testing pure functions. Run `pnpm test` (and `pnpm typecheck`) before committing.
+
+## Releases (CI/CD)
+
+`.github/workflows/release.yml` runs on every push to `main`:
+
+1. **Version** job bumps `package.json` (`npm version`), commits it back as
+   `chore(release): vX.Y.Z [skip ci]`, pushes a matching `vX.Y.Z` tag, and
+   creates a GitHub Release with generated notes. Bump level defaults to
+   `patch`; put `#minor` or `#major` in the merge commit message to override.
+2. **Build** job (matrix: ubuntu/windows/macos) checks out the new tag, runs
+   `pnpm dist` (electron-builder), and attaches the installers
+   (`.AppImage`, `.exe`, `.dmg`) to the release for direct download.
+
+Notes:
+- The bump commit carries `[skip ci]` so it does not re-trigger the workflow.
+- Builds are **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`); add signing
+  secrets and config when distribution requires it.
+- electron-builder runs with `publish: null`; release assets are uploaded by the
+  workflow (`softprops/action-gh-release`), not by electron-builder.
+- The bot pushes to `main` using `GITHUB_TOKEN`; if `main` is a protected branch
+  it must allow GitHub Actions to push (or supply a PAT).

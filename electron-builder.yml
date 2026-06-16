@@ -1,11 +1,13 @@
 appId: com.firestoreide.app
 productName: Firestore IDE
+artifactName: ${name}-${version}-${os}-${arch}.${ext}
 directories:
   output: dist
   buildResources: build
 files:
   - out/**/*
   - package.json
+publish: null
 linux:
   target: [AppImage]
   category: Development
