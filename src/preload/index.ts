@@ -59,6 +59,7 @@ const api: FirestoreIdeApi = {
   listSavedQueries: () => ipcRenderer.invoke(IPC.queriesListSaved),
   saveQuery: (input) => ipcRenderer.invoke(IPC.queriesSave, input),
   deleteSavedQuery: (id) => ipcRenderer.invoke(IPC.queriesDeleteSaved, id),
+  getActiveRules: (id) => ipcRenderer.invoke(IPC.rulesGetActive, id),
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
   saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings)
 }

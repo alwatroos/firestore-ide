@@ -3,6 +3,7 @@ import { registerFilesIpc } from './files/ipc'
 import { registerFirestoreIpc } from './firestore/ipc'
 import { registerOllamaIpc } from './ollama/ipc'
 import { registerQueriesIpc } from './queries/ipc'
+import { registerRulesIpc } from './rules/ipc'
 import { registerSettingsIpc } from './settings/ipc'
 
 /**
@@ -16,5 +17,6 @@ export function registerIpc(): void {
   registerFirestoreIpc()
   registerOllamaIpc()
   registerQueriesIpc()
+  registerRulesIpc()
   registerSettingsIpc()
 }

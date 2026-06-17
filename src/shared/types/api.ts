@@ -9,6 +9,7 @@ import type {
   SaveQueryInput
 } from './queries'
 import type { Result } from './result'
+import type { SecurityRules } from './rules'
 import type { DatabaseSchema } from './schema'
 import type { AppSettings } from './settings'
 import type { CollectionBackup, ImportDoc, ImportMode, TransferResult } from './transfer'
@@ -97,6 +98,8 @@ export interface FirestoreIdeApi {
   saveQuery: (input: SaveQueryInput) => Promise<Result<SavedQuery>>
   /** Delete a saved query by id. */
   deleteSavedQuery: (id: string) => Promise<Result<void>>
+  /** Fetch the active Firestore Security Rules for a connection's project. */
+  getActiveRules: (connectionId: string) => Promise<Result<SecurityRules>>
   /** Read persisted application settings. */
   getSettings: () => Promise<Result<AppSettings>>
   /** Persist application settings. */
