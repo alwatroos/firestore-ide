@@ -1,5 +1,6 @@
 import type { DocumentRecord } from '@shared/types/firestore'
 import { atom } from 'jotai'
+import { type CostTotals, ZERO_COST } from './cost'
 
 
 /** Available tabs in the explorer pane. */
@@ -25,3 +26,6 @@ export const queryResultsAtom = atom<DocumentRecord[]>([])
 
 /** Editor mode in the Query tab: JSON spec or raw JS snippet. */
 export const queryModeAtom = atom<'json' | 'js'>('json')
+
+/** Estimated Firestore operations accrued during this session. */
+export const sessionCostAtom = atom<CostTotals>(ZERO_COST)

@@ -1,4 +1,4 @@
-import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore'
+import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { type ReactNode, useMemo, useState } from 'react'
 import { Button, Empty, ErrorBanner, WarningList } from '../../components/ui'
@@ -12,7 +12,10 @@ import { useOpenDocument } from '../documents/hooks'
 import { queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
 import { CellValue } from './CellValue'
 import { collectColumns } from './columns'
+import { estimateReads } from './cost'
 import { useQueryRunner } from './hooks'
+import { IndexHint } from './IndexHint'
+import { isMissingIndexError } from './indexes'
 import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
 
@@ -147,7 +150,7 @@ function QueryResultsTable(): ReactNode {
   return (
     <div className="overflow-auto">
       <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
-        {results.length} result{results.length !== 1 ? 's' : ''}
+        {results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads
       </div>
       <table className="w-full border-collapse text-left text-xs">
         <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -187,6 +190,7 @@ async function executeJsonQuery(
   queryText: string,
   collectionGroup: boolean,
   setCollection: (c: string) => void,
+  setLastSpec: (spec: QuerySpec | null) => void,
   runSpec: ReturnType<typeof useQueryRunner>['runSpec'],
   setParseError: (msg: string | null) => void
 ): Promise<void> {
@@ -196,6 +200,7 @@ async function executeJsonQuery(
   try {
     const spec = toQuerySpec(parsed.value)
     if (collectionGroup) spec.collectionGroup = true
+    setLastSpec(spec)
     setCollection(spec.collectionPath)
     await runSpec(spec)
   } catch (e) {
@@ -218,6 +223,7 @@ export function QueryEditor(): ReactNode {
   const [mode, setMode] = useAtom(queryModeAtom)
   const [queryText, setQueryText] = useState('')
   const [collectionGroup, setCollectionGroup] = useState(false)
+  const [lastSpec, setLastSpec] = useState<QuerySpec | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
 
   const busy = mode === 'json' ? jsonBusy : jsBusy
@@ -240,7 +246,7 @@ export function QueryEditor(): ReactNode {
 
   function handleRun() {
     if (mode === 'json') {
-      void executeJsonQuery(queryText, collectionGroup, setCollection, runSpec, setParseError)
+      void executeJsonQuery(queryText, collectionGroup, setCollection, setLastSpec, runSpec, setParseError)
       return
     }
     setParseError(null)
@@ -284,6 +290,9 @@ export function QueryEditor(): ReactNode {
       )}
       <WarningList messages={warnings} />
       <ErrorBanner message={parseError ?? apiError} />
+      {mode === 'json' && lastSpec && jsonError && isMissingIndexError(jsonError) && (
+        <IndexHint spec={lastSpec} message={jsonError} />
+      )}
       <div className="min-h-0 flex-1 overflow-auto">
         <QueryResultsTable />
       </div>

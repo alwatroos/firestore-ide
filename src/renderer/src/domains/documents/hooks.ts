@@ -4,6 +4,7 @@ import type { DocumentRecord } from '@shared/types/firestore'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { selectedCollectionAtom } from '../explorer/atoms'
+import { useCostTracker } from '../explorer/hooks'
 import { selectedDocumentAtom } from './atoms'
 
 /**
@@ -52,25 +53,28 @@ export function useOpenDocument(connectionId: string | null) {
  */
 export function useDocumentMutations(connectionId: string | null, onChange: () => void) {
   const { error, busy, run } = useAsync()
+  const trackCost = useCostTracker()
   const save = useCallback(
     (doc: DocumentRecord) => {
       if (!connectionId) return undefined
       return run(async () => {
         await unwrap(api.saveDocument(connectionId, doc))
+        trackCost({ writes: 1 })
         onChange()
       })
     },
-    [connectionId, run, onChange]
+    [connectionId, run, onChange, trackCost]
   )
   const remove = useCallback(
     (path: string) => {
       if (!connectionId) return undefined
       return run(async () => {
         await unwrap(api.deleteDocument(connectionId, path))
+        trackCost({ deletes: 1 })
         onChange()
       })
     },
-    [connectionId, run, onChange]
+    [connectionId, run, onChange, trackCost]
   )
   return { save, remove, error, busy }
 }

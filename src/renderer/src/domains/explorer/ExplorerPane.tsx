@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai'
 import type { ReactNode } from 'react'
 import { activeTabAtom, type ExplorerTab } from './atoms'
+import { CostBar } from './CostBar'
 import { DocumentTable } from './DocumentTable'
 import { QueryEditor } from './QueryEditor'
 
@@ -63,6 +64,7 @@ export function ExplorerPane(): ReactNode {
       <div className="min-h-0 flex-1 overflow-hidden">
         {activeTab === 'browse' ? <DocumentTable /> : <QueryEditor />}
       </div>
+      <CostBar />
     </div>
   )
 }
