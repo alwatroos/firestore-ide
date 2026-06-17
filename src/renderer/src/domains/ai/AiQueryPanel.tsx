@@ -5,6 +5,7 @@ import { activeConnectionAtom } from '../connections/atoms'
 import { activeTabAtom, queryResultsAtom, selectedCollectionAtom } from '../explorer/atoms'
 import { useQueryRunner } from '../explorer/hooks'
 import { queryWarnings } from '../explorer/queryWarnings'
+import { useQueryHistory } from '../queries/hooks'
 import { useSettings } from '../settings/hooks'
 import { useGenerateStream, useModels } from './hooks'
 import { parseQuerySpec } from './parse'
@@ -121,6 +122,7 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
   const [draft, setDraft] = useState('')
   const { generate, error, busy } = useGenerateStream()
   const { runSpec, busy: runBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
+  const { record } = useQueryHistory()
   const setCollection = useSetAtom(selectedCollectionAtom)
   const setTab = useSetAtom(activeTabAtom)
 
@@ -151,6 +153,7 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
   async function onRun(): Promise<void> {
     setLocalError(null)
     await applySpec(draft, setCollection, setTab, runSpec, setLocalError)
+    if (active) void record({ connectionId: active.id, kind: 'ai', query: draft, instruction })
   }
 
   // Advisory warnings for the draft query, recomputed as the user edits it.

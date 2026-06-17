@@ -18,3 +18,12 @@ export function connectionsFile(): string {
 export function settingsFile(): string {
   return join(app.getPath('userData'), 'settings.json')
 }
+
+/**
+ * Absolute path to the query history / saved queries store file.
+ *
+ * @returns Path to `queries.json`.
+ */
+export function queriesFile(): string {
+  return join(app.getPath('userData'), 'queries.json')
+}

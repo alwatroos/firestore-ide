@@ -9,7 +9,8 @@ import { activeConnectionAtom } from '../connections/atoms'
 import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
 import { useOpenDocument } from '../documents/hooks'
-import { queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
+import { useQueryHistory } from '../queries/hooks'
+import { queryDraftAtom, queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
 import { CellValue } from './CellValue'
 import { collectColumns } from './columns'
 import { estimateReads } from './cost'
@@ -203,18 +204,23 @@ async function executeJsonQuery(
   setLastSpec: (spec: QuerySpec | null) => void,
   runSpec: ReturnType<typeof useQueryRunner>['runSpec'],
   setParseError: (msg: string | null) => void
-): Promise<void> {
+): Promise<number | null> {
   setParseError(null)
   const parsed = parseJsonObject(queryText)
-  if (!parsed.ok) return setParseError(parsed.error)
+  if (!parsed.ok) {
+    setParseError(parsed.error)
+    return null
+  }
   try {
     const spec = toQuerySpec(parsed.value)
     if (collectionGroup) spec.collectionGroup = true
     setLastSpec(spec)
     setCollection(spec.collectionPath)
-    await runSpec(spec)
+    const docs = await runSpec(spec)
+    return docs?.length ?? 0
   } catch (e) {
     setParseError(e instanceof Error ? e.message : 'Invalid query spec')
+    return null
   }
 }
 
@@ -230,8 +236,9 @@ export function QueryEditor(): ReactNode {
   const setResults = useSetAtom(queryResultsAtom)
   const { runSpec, error: jsonError, busy: jsonBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
   const { error: jsError, busy: jsBusy, run: runJs } = useAsync()
+  const { record } = useQueryHistory()
   const [mode, setMode] = useAtom(queryModeAtom)
-  const [queryText, setQueryText] = useState('')
+  const [queryText, setQueryText] = useAtom(queryDraftAtom)
   const [collectionGroup, setCollectionGroup] = useState(false)
   const [lastSpec, setLastSpec] = useState<QuerySpec | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
@@ -254,17 +261,22 @@ export function QueryEditor(): ReactNode {
   // JS snippets can write, so they are blocked while read-only.
   const runDisabled = !queryText.trim() || !active || (mode === 'js' && readOnly)
 
-  function handleRun() {
+  async function handleRun(): Promise<void> {
     if (mode === 'json') {
-      void executeJsonQuery(queryText, collectionGroup, setCollection, setLastSpec, runSpec, setParseError)
+      const count = await executeJsonQuery(queryText, collectionGroup, setCollection, setLastSpec, runSpec, setParseError)
+      if (count !== null && active) {
+        void record({ connectionId: active.id, kind: 'json', query: queryText, resultCount: count })
+      }
       return
     }
     setParseError(null)
     if (!active) return setParseError('No active connection')
-    void runJs(async () => {
-      const results = await unwrap(api.runJsQuery(active.id, queryText))
-      setResults(results)
+    const results = await runJs(async () => {
+      const r = await unwrap(api.runJsQuery(active.id, queryText))
+      setResults(r)
+      return r
     })
+    void record({ connectionId: active.id, kind: 'js', query: queryText, resultCount: results?.length })
   }
 
   return (
@@ -272,7 +284,7 @@ export function QueryEditor(): ReactNode {
       <QueryToolbar
         mode={mode}
         onModeChange={(m) => { setMode(m); setParseError(null) }}
-        onRun={handleRun}
+        onRun={() => void handleRun()}
         busy={busy}
         disabled={runDisabled}
       />

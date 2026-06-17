@@ -2,6 +2,12 @@ import type { ConnectionMeta, ConnectionPatch, NewConnectionInput } from './conn
 import type { FileFilter, OpenFileResult, SaveFileResult } from './files'
 import type { DocumentRecord, QuerySpec } from './firestore'
 import type { GeneratedQuery, GenerateQueryInput, OllamaModel } from './ollama'
+import type {
+  QueryHistoryEntry,
+  RecordQueryInput,
+  SavedQuery,
+  SaveQueryInput
+} from './queries'
 import type { Result } from './result'
 import type { DatabaseSchema } from './schema'
 import type { AppSettings } from './settings'
@@ -81,6 +87,16 @@ export interface FirestoreIdeApi {
   ) => Promise<Result<SaveFileResult>>
   /** Open and read a user-chosen file via a native dialog. */
   openFile: (filters?: FileFilter[]) => Promise<Result<OpenFileResult>>
+  /** List recorded query history, most recent first. */
+  listQueryHistory: () => Promise<Result<QueryHistoryEntry[]>>
+  /** Record a query execution into history. */
+  recordQuery: (input: RecordQueryInput) => Promise<Result<QueryHistoryEntry>>
+  /** List user-named saved queries. */
+  listSavedQueries: () => Promise<Result<SavedQuery[]>>
+  /** Save a named query. */
+  saveQuery: (input: SaveQueryInput) => Promise<Result<SavedQuery>>
+  /** Delete a saved query by id. */
+  deleteSavedQuery: (id: string) => Promise<Result<void>>
   /** Read persisted application settings. */
   getSettings: () => Promise<Result<AppSettings>>
   /** Persist application settings. */

@@ -54,6 +54,11 @@ const api: FirestoreIdeApi = {
   saveFile: (suggestedName, content, filters) =>
     ipcRenderer.invoke(IPC.filesSave, suggestedName, content, filters),
   openFile: (filters) => ipcRenderer.invoke(IPC.filesOpen, filters),
+  listQueryHistory: () => ipcRenderer.invoke(IPC.queriesListHistory),
+  recordQuery: (input) => ipcRenderer.invoke(IPC.queriesRecord, input),
+  listSavedQueries: () => ipcRenderer.invoke(IPC.queriesListSaved),
+  saveQuery: (input) => ipcRenderer.invoke(IPC.queriesSave, input),
+  deleteSavedQuery: (id) => ipcRenderer.invoke(IPC.queriesDeleteSaved, id),
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
   saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings)
 }

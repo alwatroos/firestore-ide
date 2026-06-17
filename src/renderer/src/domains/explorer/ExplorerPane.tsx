@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai'
 import type { ReactNode } from 'react'
+import { QueryHistoryPanel } from '../queries/QueryHistoryPanel'
 import { activeTabAtom, type ExplorerTab } from './atoms'
 import { CostBar } from './CostBar'
 import { DocumentTable } from './DocumentTable'
@@ -47,8 +48,21 @@ function TabBar({ active, onChange }: { active: ExplorerTab; onChange: (t: Explo
     <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950">
       <TabButton id="browse" label="Browse" active={active} onClick={onChange} />
       <TabButton id="query" label="Query" active={active} onClick={onChange} />
+      <TabButton id="history" label="History" active={active} onClick={onChange} />
     </div>
   )
+}
+
+/**
+ * Render the panel for the active explorer tab.
+ *
+ * @param props - The active tab.
+ * @returns The matching panel.
+ */
+function TabPanel({ tab }: { tab: ExplorerTab }): ReactNode {
+  if (tab === 'browse') return <DocumentTable />
+  if (tab === 'query') return <QueryEditor />
+  return <QueryHistoryPanel />
 }
 
 /**
@@ -62,7 +76,7 @@ export function ExplorerPane(): ReactNode {
     <div className="flex min-h-0 flex-1 flex-col">
       <TabBar active={activeTab} onChange={setActiveTab} />
       <div className="min-h-0 flex-1 overflow-hidden">
-        {activeTab === 'browse' ? <DocumentTable /> : <QueryEditor />}
+        <TabPanel tab={activeTab} />
       </div>
       <CostBar />
     </div>

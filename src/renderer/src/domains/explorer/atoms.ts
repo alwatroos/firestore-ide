@@ -4,7 +4,7 @@ import { type CostTotals, ZERO_COST } from './cost'
 
 
 /** Available tabs in the explorer pane. */
-export type ExplorerTab = 'browse' | 'query'
+export type ExplorerTab = 'browse' | 'query' | 'history'
 
 /** Collection ids available for the active connection. */
 export const collectionsAtom = atom<string[]>([])
@@ -26,6 +26,9 @@ export const queryResultsAtom = atom<DocumentRecord[]>([])
 
 /** Editor mode in the Query tab: JSON spec or raw JS snippet. */
 export const queryModeAtom = atom<'json' | 'js'>('json')
+
+/** The current text in the Query editor (shared so history can populate it). */
+export const queryDraftAtom = atom('')
 
 /** Estimated Firestore operations accrued during this session. */
 export const sessionCostAtom = atom<CostTotals>(ZERO_COST)
