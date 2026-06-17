@@ -47,8 +47,8 @@ describe('applyFiltersOnly', () => {
       collectionPath: 'orders',
       filters: [
         { field: 'status', operator: '==', value: 'active' },
-        { field: 'price', operator: '>', value: 10 }
-      ]
+        { field: 'price', operator: '>', value: 10 },
+      ],
     }
     applyFiltersOnly(q as never, spec)
     expect(calls).toEqual(['where(status,==,active)', 'where(price,>,10)'])
@@ -60,7 +60,7 @@ describe('applyFiltersOnly', () => {
       collectionPath: 'x',
       filters: [{ field: 'a', operator: '==', value: 1 }],
       order: { field: 'a', direction: 'asc' },
-      limit: 5
+      limit: 5,
     })
     expect(calls.some((c) => c.startsWith('orderBy') || c.startsWith('limit'))).toBe(false)
   })
@@ -73,7 +73,7 @@ describe('applySpec', () => {
       collectionPath: 'products',
       filters: [{ field: 'active', operator: '==', value: true }],
       order: { field: 'name', direction: 'asc' },
-      limit: 25
+      limit: 25,
     }
     applySpec(q as never, spec)
     expect(calls).toEqual(['where(active,==,true)', 'orderBy(name,asc)', 'limit(25)'])

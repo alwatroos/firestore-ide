@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest'
 import type { DocumentRecord } from '@shared/types/firestore'
+import { describe, expect, it } from 'vitest'
 import { collectColumns, formatCell } from './columns'
 
 const docs: DocumentRecord[] = [
   { id: '1', path: 'c/1', data: { a: 1, b: 2 } },
-  { id: '2', path: 'c/2', data: { b: 3, c: 4 } }
+  { id: '2', path: 'c/2', data: { b: 3, c: 4 } },
 ]
 
 describe('collectColumns', () => {

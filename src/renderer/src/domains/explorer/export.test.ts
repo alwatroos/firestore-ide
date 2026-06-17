@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest'
 import type { DocumentRecord } from '@shared/types/firestore'
+import { describe, expect, it } from 'vitest'
 import { toCsv, toJson } from './export'
 
 const records: DocumentRecord[] = [
   { id: '1', path: 'c/1', data: { name: 'Alice', city: 'NY' } },
-  { id: '2', path: 'c/2', data: { name: 'Bob, Jr', ref: { _ref: 'users/9' } } }
+  { id: '2', path: 'c/2', data: { name: 'Bob, Jr', ref: { _ref: 'users/9' } } },
 ]
 
 describe('toJson', () => {

@@ -34,7 +34,7 @@ export const IPC = {
   ollamaStreamDone: 'ollama:streamDone',
   ollamaStreamError: 'ollama:streamError',
   settingsGet: 'settings:get',
-  settingsSave: 'settings:save'
+  settingsSave: 'settings:save',
 } as const
 
 /** Union of all valid IPC channel names. */

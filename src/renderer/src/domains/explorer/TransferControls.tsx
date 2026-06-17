@@ -8,7 +8,13 @@ import { documentsAtom, documentsVersionAtom, selectedCollectionAtom } from './a
 import { type ParsedBackup, type ParsedImport, useTransfer } from './useTransfer'
 
 /** A small overwrite/merge selector shared by the import and restore dialogs. */
-function ModePicker({ mode, onChange }: { mode: ImportMode; onChange: (m: ImportMode) => void }): ReactNode {
+function ModePicker({
+  mode,
+  onChange,
+}: {
+  mode: ImportMode
+  onChange: (m: ImportMode) => void
+}): ReactNode {
   return (
     <div className="mt-2 flex gap-3 text-sm">
       {(['overwrite', 'merge'] as const).map((option) => (
@@ -34,9 +40,8 @@ export function TransferControls(): ReactNode {
   const documents = useAtomValue(documentsAtom)
   const bumpVersion = useSetAtom(documentsVersionAtom)
   const readOnly = useReadOnly()
-  const { exportRecords, backup, pickImport, runImport, pickRestore, runRestore, error, busy } = useTransfer(
-    active?.id ?? null
-  )
+  const { exportRecords, backup, pickImport, runImport, pickRestore, runRestore, error, busy } =
+    useTransfer(active?.id ?? null)
   const [pendingImport, setPendingImport] = useState<ParsedImport | null>(null)
   const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null)
   const [mode, setMode] = useState<ImportMode>('overwrite')
@@ -64,10 +69,18 @@ export function TransferControls(): ReactNode {
 
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <Button variant="ghost" disabled={busy || documents.length === 0} onClick={() => void exportRecords(documents, 'json', base)}>
+      <Button
+        variant="ghost"
+        disabled={busy || documents.length === 0}
+        onClick={() => void exportRecords(documents, 'json', base)}
+      >
         Export JSON
       </Button>
-      <Button variant="ghost" disabled={busy || documents.length === 0} onClick={() => void exportRecords(documents, 'csv', base)}>
+      <Button
+        variant="ghost"
+        disabled={busy || documents.length === 0}
+        onClick={() => void exportRecords(documents, 'csv', base)}
+      >
         Export CSV
       </Button>
       <Button variant="ghost" disabled={busy} onClick={() => void backup(collection)}>
@@ -117,8 +130,8 @@ export function TransferControls(): ReactNode {
           }}
         >
           <p>
-            Restore <strong>{pendingRestore.backup.documents.length}</strong> top-level document(s) (plus any
-            sub-collections) from <code>{pendingRestore.name}</code> into{' '}
+            Restore <strong>{pendingRestore.backup.documents.length}</strong> top-level document(s)
+            (plus any sub-collections) from <code>{pendingRestore.name}</code> into{' '}
             <code>{pendingRestore.backup.path}</code>.
           </p>
           <ModePicker mode={mode} onChange={setMode} />

@@ -1,0 +1,10 @@
+allowBuilds:
+  "@firebase/util": true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  protobufjs: true
+
+minimumReleaseAgeExclude:
+  - electron@42.4.1
+  - happy-dom@20.10.5

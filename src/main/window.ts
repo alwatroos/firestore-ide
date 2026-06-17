@@ -14,7 +14,7 @@ function buildPreferences(): Electron.WebPreferences {
     preload: join(moduleDir, '../preload/index.mjs'),
     sandbox: false,
     contextIsolation: true,
-    nodeIntegration: false
+    nodeIntegration: false,
   }
 }
 
@@ -41,7 +41,7 @@ export function createMainWindow(): BrowserWindow {
     height: 820,
     show: false,
     autoHideMenuBar: true,
-    webPreferences: buildPreferences()
+    webPreferences: buildPreferences(),
   })
   window.on('ready-to-show', () => window.show())
   window.webContents.setWindowOpenHandler(({ url }) => {

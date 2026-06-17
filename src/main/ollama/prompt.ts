@@ -22,7 +22,7 @@ const SYSTEM_INSTRUCTIONS = [
   'For a collection group query (all sub-collections sharing one id, regardless of parent),',
   'set "collectionGroup": true and use the bare collection id as "collectionPath".',
   'Valid operators: ==, !=, <, <=, >, >=, array-contains, in, array-contains-any.',
-  'Respond with JSON only, no prose.'
+  'Respond with JSON only, no prose.',
 ].join(' ')
 
 /**
@@ -62,6 +62,6 @@ export function describeSchema(schema: DatabaseSchema): string {
 export function buildMessages(schema: DatabaseSchema, instruction: string): ChatMessage[] {
   return [
     { role: 'system', content: `${SYSTEM_INSTRUCTIONS}\n\n${describeSchema(schema)}` },
-    { role: 'user', content: instruction }
+    { role: 'user', content: instruction },
   ]
 }

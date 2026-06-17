@@ -37,6 +37,6 @@ export function addCost(totals: CostTotals, delta: Partial<CostTotals>): CostTot
   return {
     reads: totals.reads + (delta.reads ?? 0),
     writes: totals.writes + (delta.writes ?? 0),
-    deletes: totals.deletes + (delta.deletes ?? 0)
+    deletes: totals.deletes + (delta.deletes ?? 0),
   }
 }

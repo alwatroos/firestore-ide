@@ -1,6 +1,6 @@
-import { DocumentReference, GeoPoint, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { FIELD_MARKERS } from '@shared/types/firestore'
 import { markerKind } from '@shared/utils/markers'
+import { DocumentReference, type Firestore, GeoPoint, Timestamp } from 'firebase-admin/firestore'
 
 /**
  * Convert a single Firestore-native value into a JSON-serialisable form so it
@@ -13,7 +13,8 @@ import { markerKind } from '@shared/utils/markers'
  */
 export function toPlain(value: unknown): unknown {
   if (value instanceof Timestamp) return { [FIELD_MARKERS.timestamp]: value.toDate().toISOString() }
-  if (value instanceof GeoPoint) return { [FIELD_MARKERS.geopoint]: [value.latitude, value.longitude] }
+  if (value instanceof GeoPoint)
+    return { [FIELD_MARKERS.geopoint]: [value.latitude, value.longitude] }
   if (value instanceof DocumentReference) return { [FIELD_MARKERS.reference]: value.path }
   if (value instanceof Buffer) return { [FIELD_MARKERS.bytes]: value.toString('base64') }
   if (Array.isArray(value)) return value.map(toPlain)
@@ -69,12 +70,18 @@ function readMarker(obj: Record<string, unknown>): Marker | null {
 function reviveMarker(marker: Marker, db: Firestore): unknown {
   if (marker.kind === 'timestamp') {
     const date = new Date(marker.value as string)
-    if (Number.isNaN(date.getTime())) throw new Error(`Invalid _timestamp value: ${String(marker.value)}`)
+    if (Number.isNaN(date.getTime()))
+      throw new Error(`Invalid _timestamp value: ${String(marker.value)}`)
     return Timestamp.fromDate(date)
   }
   if (marker.kind === 'geopoint') {
     const tuple = marker.value
-    if (!Array.isArray(tuple) || tuple.length !== 2 || typeof tuple[0] !== 'number' || typeof tuple[1] !== 'number') {
+    if (
+      !Array.isArray(tuple) ||
+      tuple.length !== 2 ||
+      typeof tuple[0] !== 'number' ||
+      typeof tuple[1] !== 'number'
+    ) {
       throw new Error('Invalid _geopoint value: expected [latitude, longitude]')
     }
     return new GeoPoint(tuple[0], tuple[1])
@@ -85,7 +92,8 @@ function reviveMarker(marker: Marker, db: Firestore): unknown {
     }
     return db.doc(marker.value)
   }
-  if (typeof marker.value !== 'string') throw new Error('Invalid _bytes value: expected a base64 string')
+  if (typeof marker.value !== 'string')
+    throw new Error('Invalid _bytes value: expected a base64 string')
   return Buffer.from(marker.value, 'base64')
 }
 
@@ -127,6 +135,9 @@ function unmapObject(obj: Record<string, unknown>, db: Firestore): Record<string
  * @param db - Firestore instance for reference markers.
  * @returns Field map ready to persist with the Firestore SDK.
  */
-export function fromPlainData(data: Record<string, unknown>, db: Firestore): Record<string, unknown> {
+export function fromPlainData(
+  data: Record<string, unknown>,
+  db: Firestore
+): Record<string, unknown> {
   return unmapObject(data, db)
 }

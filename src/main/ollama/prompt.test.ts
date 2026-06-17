@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest'
 import type { DatabaseSchema } from '@shared/types/schema'
+import { describe, expect, it } from 'vitest'
 import { buildMessages, describeSchema } from './prompt'
 
 const schema: DatabaseSchema = {
   projectId: 'p',
   collections: [
-    { path: 'users', sampleSize: 1, fields: [{ name: 'age', types: ['number'], occurrences: 1 }] }
-  ]
+    { path: 'users', sampleSize: 1, fields: [{ name: 'age', types: ['number'], occurrences: 1 }] },
+  ],
 }
 
 describe('describeSchema', () => {

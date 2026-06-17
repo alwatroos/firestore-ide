@@ -41,7 +41,9 @@ export function useTransfer(connectionId: string | null) {
       run(async () => {
         const content = format === 'csv' ? toCsv(records) : toJson(records)
         await unwrap(
-          api.saveFile(`${baseName}.${format}`, content, [{ name: format.toUpperCase(), extensions: [format] }])
+          api.saveFile(`${baseName}.${format}`, content, [
+            { name: format.toUpperCase(), extensions: [format] },
+          ])
         )
       }),
     [run]
@@ -54,7 +56,7 @@ export function useTransfer(connectionId: string | null) {
         const tree = await unwrap(api.readCollection(connectionId, collectionPath))
         await unwrap(
           api.saveFile(`${fileBase(collectionPath)}.backup.json`, JSON.stringify(tree, null, 2), [
-            { name: 'JSON', extensions: ['json'] }
+            { name: 'JSON', extensions: ['json'] },
           ])
         )
       })
@@ -124,6 +126,6 @@ function normaliseImportDoc(entry: unknown): ImportDoc {
   }
   return {
     ...(typeof record.id === 'string' ? { id: record.id } : {}),
-    data: data as Record<string, unknown>
+    data: data as Record<string, unknown>,
   }
 }

@@ -5,7 +5,7 @@
   "author": "firestore-ide",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.7.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alwatroos/firestore-ide.git"
@@ -22,7 +22,12 @@
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "format:write": "biome format --write .",
+    "check": "biome check .",
+    "check:write": "biome check --write ."
   },
   "dependencies": {
     "firebase-admin": "14.0.0",
@@ -32,6 +37,7 @@
     "react-dom": "19.2.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.0",
     "@electron/notarize": "^3.1.1",
     "@tailwindcss/vite": "4.3.1",
     "@testing-library/react": "16.3.2",
@@ -40,22 +46,14 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.2.0",
     "@vitest/coverage-v8": "4.1.9",
-    "electron": "42.4.0",
+    "electron": "42.4.1",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
-    "happy-dom": "20.10.3",
+    "happy-dom": "20.10.5",
     "husky": "9.1.7",
     "tailwindcss": "4.3.1",
     "typescript": "6.0.3",
     "vite": "7.3.5",
     "vitest": "4.1.9"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "electron",
-      "esbuild",
-      "protobufjs",
-      "@firebase/util"
-    ]
   }
 }

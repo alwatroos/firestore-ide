@@ -1,12 +1,20 @@
-import { describe, expect, it } from 'vitest'
 import type { QuerySpec } from '@shared/types/firestore'
-import { buildIndexDefinition, extractIndexUrl, indexesFileSnippet, isMissingIndexError } from './indexes'
+import { describe, expect, it } from 'vitest'
+import {
+  buildIndexDefinition,
+  extractIndexUrl,
+  indexesFileSnippet,
+  isMissingIndexError,
+} from './indexes'
 
-const indexUrl = 'https://console.firebase.google.com/v1/r/project/p/firestore/indexes?create_composite=abc'
+const indexUrl =
+  'https://console.firebase.google.com/v1/r/project/p/firestore/indexes?create_composite=abc'
 
 describe('extractIndexUrl', () => {
   it('pulls the console URL out of an error message', () => {
-    expect(extractIndexUrl(`The query requires an index. Create it here: ${indexUrl}`)).toBe(indexUrl)
+    expect(extractIndexUrl(`The query requires an index. Create it here: ${indexUrl}`)).toBe(
+      indexUrl
+    )
   })
 
   it('returns null when no URL is present', () => {
@@ -30,9 +38,9 @@ describe('buildIndexDefinition', () => {
       collectionPath: 'users',
       filters: [
         { field: 'age', operator: '>', value: 18 },
-        { field: 'active', operator: '==', value: true }
+        { field: 'active', operator: '==', value: true },
       ],
-      order: { field: 'createdAt', direction: 'desc' }
+      order: { field: 'createdAt', direction: 'desc' },
     }
     const def = buildIndexDefinition(spec)
     expect(def.collectionGroup).toBe('users')
@@ -45,7 +53,7 @@ describe('buildIndexDefinition', () => {
     const spec: QuerySpec = {
       collectionPath: 'orders',
       collectionGroup: true,
-      filters: [{ field: 'tags', operator: 'array-contains', value: 'x' }]
+      filters: [{ field: 'tags', operator: 'array-contains', value: 'x' }],
     }
     const def = buildIndexDefinition(spec)
     expect(def.queryScope).toBe('COLLECTION_GROUP')
@@ -53,13 +61,17 @@ describe('buildIndexDefinition', () => {
   })
 
   it('derives the collection id from a sub-collection path', () => {
-    expect(buildIndexDefinition({ collectionPath: 'users/1/orders' }).collectionGroup).toBe('orders')
+    expect(buildIndexDefinition({ collectionPath: 'users/1/orders' }).collectionGroup).toBe(
+      'orders'
+    )
   })
 })
 
 describe('indexesFileSnippet', () => {
   it('wraps the definition in an indexes array', () => {
     const snippet = JSON.parse(indexesFileSnippet({ collectionPath: 'users' }))
-    expect(snippet).toEqual({ indexes: [{ collectionGroup: 'users', queryScope: 'COLLECTION', fields: [] }] })
+    expect(snippet).toEqual({
+      indexes: [{ collectionGroup: 'users', queryScope: 'COLLECTION', fields: [] }],
+    })
   })
 })

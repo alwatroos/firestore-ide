@@ -21,5 +21,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultModel: null,
   schemaSampleSize: 25,
   theme: 'system',
-  readOnly: false
+  readOnly: false,
 }

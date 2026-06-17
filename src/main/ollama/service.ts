@@ -14,7 +14,11 @@ import { buildMessages } from './prompt'
 export async function generateQuery(input: GenerateQueryInput): Promise<GeneratedQuery> {
   const settings = await loadSettings()
   const schema = await inferSchema(input.connectionId, settings.schemaSampleSize)
-  const raw = await chatJson(settings.ollamaHost, input.model, buildMessages(schema, input.instruction))
+  const raw = await chatJson(
+    settings.ollamaHost,
+    input.model,
+    buildMessages(schema, input.instruction)
+  )
   return { raw, model: input.model }
 }
 

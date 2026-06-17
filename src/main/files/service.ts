@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
-import { dialog } from 'electron'
 import type { FileFilter, OpenFileResult, SaveFileResult } from '@shared/types/files'
+import { dialog } from 'electron'
 
 /**
  * Prompt for a destination and write UTF-8 text to it.

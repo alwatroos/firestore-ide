@@ -13,7 +13,9 @@ const RULES_API = 'https://firebaserules.googleapis.com/v1'
  */
 async function apiError(response: Response): Promise<Error> {
   if (response.status === 403) {
-    return new Error('Permission denied: the service account needs the "Firebase Rules Viewer" role to read Security Rules.')
+    return new Error(
+      'Permission denied: the service account needs the "Firebase Rules Viewer" role to read Security Rules.'
+    )
   }
   if (response.status === 404) {
     return new Error('No active Firestore Security Rules release was found for this project.')
@@ -35,7 +37,9 @@ export async function getActiveRules(connectionId: string): Promise<SecurityRule
   const token = await getAccessToken(connectionId)
   const headers = { Authorization: `Bearer ${token}` }
 
-  const releaseRes = await fetch(`${RULES_API}/projects/${projectId}/releases/cloud.firestore`, { headers })
+  const releaseRes = await fetch(`${RULES_API}/projects/${projectId}/releases/cloud.firestore`, {
+    headers,
+  })
   if (!releaseRes.ok) throw await apiError(releaseRes)
   const release = (await releaseRes.json()) as { rulesetName?: string }
   if (!release.rulesetName) throw new Error('Active release did not reference a ruleset.')

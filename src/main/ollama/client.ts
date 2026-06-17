@@ -1,5 +1,5 @@
-import { Ollama } from 'ollama'
 import type { OllamaModel } from '@shared/types/ollama'
+import { Ollama } from 'ollama'
 import type { ChatMessage } from './prompt'
 
 /**

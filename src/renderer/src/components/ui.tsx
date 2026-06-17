@@ -5,8 +5,9 @@ type Variant = 'primary' | 'ghost' | 'danger'
 
 const VARIANT_CLASS: Record<Variant, string> = {
   primary: 'bg-blue-600 hover:bg-blue-500 text-white',
-  ghost: 'bg-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300',
-  danger: 'bg-red-600 hover:bg-red-500 text-white'
+  ghost:
+    'bg-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300',
+  danger: 'bg-red-600 hover:bg-red-500 text-white',
 }
 
 /** Props for {@link Button}. */
@@ -100,16 +101,21 @@ export function ConfirmDialog({
   danger = false,
   busy = false,
   onConfirm,
-  onCancel
+  onCancel,
 }: ConfirmDialogProps): ReactNode {
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40" onClick={onCancel}>
+    <div
+      className="fixed inset-0 z-20 flex items-center justify-center bg-black/40"
+      onClick={onCancel}
+    >
       <div
         className="w-[28rem] max-w-[90vw] space-y-3 rounded-lg bg-white dark:bg-slate-800 p-5 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <h2 className="text-lg font-semibold dark:text-slate-200">{title}</h2>
-        {children ? <div className="text-sm text-slate-600 dark:text-slate-300">{children}</div> : null}
+        {children ? (
+          <div className="text-sm text-slate-600 dark:text-slate-300">{children}</div>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>
             Cancel

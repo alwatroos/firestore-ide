@@ -29,14 +29,19 @@ export function RulesDialog({ connectionId, onClose }: RulesDialogProps): ReactN
   }, [connectionId, run])
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-10 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
       <div
         className="flex max-h-[80vh] w-[44rem] max-w-[92vw] flex-col gap-3 rounded-lg bg-white dark:bg-slate-800 p-5 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold dark:text-slate-200">Security Rules</h2>
-          <Button variant="ghost" onClick={onClose} aria-label="Close">✕</Button>
+          <Button variant="ghost" onClick={onClose} aria-label="Close">
+            ✕
+          </Button>
         </div>
         {!connectionId && <p className="text-sm text-slate-400">Select a connection first.</p>}
         <ErrorBanner message={error} />

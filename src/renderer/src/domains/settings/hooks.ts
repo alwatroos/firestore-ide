@@ -1,6 +1,6 @@
+import type { AppSettings } from '@shared/types/settings'
 import { useAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
-import type { AppSettings } from '@shared/types/settings'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { settingsAtom } from './atoms'

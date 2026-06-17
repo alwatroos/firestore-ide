@@ -61,16 +61,29 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
   return (
     <section className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-2">
-        <code className="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">{selected.path}</code>
+        <code className="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">
+          {selected.path}
+        </code>
         <div className="ml-2 flex shrink-0 items-center gap-2">
-          {readOnly && <span className="text-xs text-amber-600 dark:text-amber-400">read-only</span>}
+          {readOnly && (
+            <span className="text-xs text-amber-600 dark:text-amber-400">read-only</span>
+          )}
           <Button onClick={() => void onSave()} disabled={busy || readOnly}>
             Save
           </Button>
-          <Button variant="danger" onClick={() => setConfirmDelete(true)} disabled={busy || readOnly}>
+          <Button
+            variant="danger"
+            onClick={() => setConfirmDelete(true)}
+            disabled={busy || readOnly}
+          >
             Delete
           </Button>
-          <Button variant="ghost" onClick={() => setSelected(null)} title="Close editor" aria-label="Close editor">
+          <Button
+            variant="ghost"
+            onClick={() => setSelected(null)}
+            title="Close editor"
+            aria-label="Close editor"
+          >
             ✕
           </Button>
         </div>
@@ -95,7 +108,9 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
           onConfirm={() => void onDelete()}
         >
           <p className="mb-2">This permanently deletes:</p>
-          <code className="block break-all rounded bg-slate-100 dark:bg-slate-900 px-2 py-1 text-xs">{doc.path}</code>
+          <code className="block break-all rounded bg-slate-100 dark:bg-slate-900 px-2 py-1 text-xs">
+            {doc.path}
+          </code>
           <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-100 dark:bg-slate-900 p-2 font-mono text-xs">
             {JSON.stringify(doc.data, null, 2)}
           </pre>

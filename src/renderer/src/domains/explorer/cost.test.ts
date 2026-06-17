@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore'
+import { describe, expect, it } from 'vitest'
 import { addCost, estimateReads, ZERO_COST } from './cost'
 
 const doc = (id: string): DocumentRecord => ({ id, path: `c/${id}`, data: {} })
@@ -14,7 +14,9 @@ describe('estimateReads', () => {
   })
 
   it('treats a count aggregation as a single read', () => {
-    expect(estimateReads([{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: 999 } }])).toBe(1)
+    expect(
+      estimateReads([{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: 999 } }])
+    ).toBe(1)
   })
 })
 

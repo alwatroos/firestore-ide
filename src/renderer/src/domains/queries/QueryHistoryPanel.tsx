@@ -49,10 +49,19 @@ function SavedSection(): ReactNode {
       ) : (
         <ul className="space-y-1">
           {mine.map((query: SavedQuery) => (
-            <li key={query.id} className="flex items-center gap-2 rounded border border-slate-200 dark:border-slate-700 px-2 py-1">
-              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => load(query.kind, query.query)}>
+            <li
+              key={query.id}
+              className="flex items-center gap-2 rounded border border-slate-200 dark:border-slate-700 px-2 py-1"
+            >
+              <button
+                type="button"
+                className="min-w-0 flex-1 text-left"
+                onClick={() => load(query.kind, query.query)}
+              >
                 <div className="truncate text-sm font-medium dark:text-slate-200">{query.name}</div>
-                <div className="truncate font-mono text-xs text-slate-400">{query.kind} · {preview(query.query)}</div>
+                <div className="truncate font-mono text-xs text-slate-400">
+                  {query.kind} · {preview(query.query)}
+                </div>
               </button>
               <button
                 type="button"
@@ -91,13 +100,18 @@ function HistorySection(): ReactNode {
               onClick={() => load(entry.kind, entry.query)}
             >
               <div className="flex justify-between text-xs text-slate-400">
-                <span>{entry.kind}{entry.instruction ? ` · "${entry.instruction}"` : ''}</span>
+                <span>
+                  {entry.kind}
+                  {entry.instruction ? ` · "${entry.instruction}"` : ''}
+                </span>
                 <span>
                   {entry.resultCount != null ? `${entry.resultCount} result(s) · ` : ''}
                   {new Date(entry.createdAt).toLocaleTimeString()}
                 </span>
               </div>
-              <div className="truncate font-mono text-xs dark:text-slate-300">{preview(entry.query)}</div>
+              <div className="truncate font-mono text-xs dark:text-slate-300">
+                {preview(entry.query)}
+              </div>
             </button>
           </li>
         ))}

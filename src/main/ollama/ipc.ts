@@ -1,5 +1,5 @@
-import type { GenerateQueryInput } from '@shared/types/ollama'
 import { IPC } from '@shared/ipc/channels'
+import type { GenerateQueryInput } from '@shared/types/ollama'
 import { ok, toMessage } from '@shared/utils/result'
 import { ipcMain } from 'electron'
 import { handle } from '../core/ipc'

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { QuerySpec } from '@shared/types/firestore'
+import { describe, expect, it } from 'vitest'
 import { queryWarnings } from './queryWarnings'
 
 describe('queryWarnings', () => {
@@ -14,7 +14,11 @@ describe('queryWarnings', () => {
   })
 
   it('flags full-scan operators', () => {
-    const spec: QuerySpec = { collectionPath: 'users', limit: 10, filters: [{ field: 'role', operator: '!=', value: 'admin' }] }
+    const spec: QuerySpec = {
+      collectionPath: 'users',
+      limit: 10,
+      filters: [{ field: 'role', operator: '!=', value: 'admin' }],
+    }
     expect(queryWarnings(spec).some((w) => w.includes('!='))).toBe(true)
   })
 
@@ -24,14 +28,16 @@ describe('queryWarnings', () => {
       limit: 10,
       filters: [
         { field: 'age', operator: '>', value: 18 },
-        { field: 'score', operator: '<', value: 100 }
-      ]
+        { field: 'score', operator: '<', value: 100 },
+      ],
     }
     expect(queryWarnings(spec).some((w) => w.includes('multiple fields'))).toBe(true)
   })
 
   it('flags a large limit', () => {
-    expect(queryWarnings({ collectionPath: 'users', limit: 500 }).some((w) => w.includes('large limit'))).toBe(true)
+    expect(
+      queryWarnings({ collectionPath: 'users', limit: 500 }).some((w) => w.includes('large limit'))
+    ).toBe(true)
   })
 
   it('is silent for a well-formed bounded query', () => {

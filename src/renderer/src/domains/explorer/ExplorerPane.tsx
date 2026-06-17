@@ -43,7 +43,13 @@ function TabButton({ id, label, active, onClick }: TabButtonProps): ReactNode {
  * @param props - Active tab and change handler.
  * @returns The rendered tab bar.
  */
-function TabBar({ active, onChange }: { active: ExplorerTab; onChange: (t: ExplorerTab) => void }): ReactNode {
+function TabBar({
+  active,
+  onChange,
+}: {
+  active: ExplorerTab
+  onChange: (t: ExplorerTab) => void
+}): ReactNode {
   return (
     <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950">
       <TabButton id="browse" label="Browse" active={active} onClick={onChange} />

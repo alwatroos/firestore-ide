@@ -26,7 +26,11 @@ function OllamaUnavailableHint({ onOpenSettings }: { onOpenSettings: () => void 
   return (
     <div className="rounded bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
       No Ollama models found. Make sure Ollama is running at the configured host.{' '}
-      <button type="button" className="underline hover:text-amber-900 dark:hover:text-amber-200" onClick={onOpenSettings}>
+      <button
+        type="button"
+        className="underline hover:text-amber-900 dark:hover:text-amber-200"
+        onClick={onOpenSettings}
+      >
         Open Settings
       </button>
     </div>
@@ -181,7 +185,9 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
         >
           {noModels && <option value="">No models available</option>}
           {models.map((m) => (
-            <option key={m.name} value={m.name}>{m.name}</option>
+            <option key={m.name} value={m.name}>
+              {m.name}
+            </option>
           ))}
         </select>
       </div>

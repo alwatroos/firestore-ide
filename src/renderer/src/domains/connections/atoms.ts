@@ -1,5 +1,5 @@
-import { atom } from 'jotai'
 import type { ConnectionMeta } from '@shared/types/connection'
+import { atom } from 'jotai'
 
 /** All known connections (secret-free metadata). */
 export const connectionsAtom = atom<ConnectionMeta[]>([])

@@ -72,14 +72,21 @@ function Toolbar({ name, count, hasMore, canCreate, onNew, onRefresh }: ToolbarP
   return (
     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-2">
       <div className="flex min-w-0 items-center gap-2">
-        <h2 className="truncate text-sm font-semibold text-slate-700 dark:text-slate-300">{name}</h2>
+        <h2 className="truncate text-sm font-semibold text-slate-700 dark:text-slate-300">
+          {name}
+        </h2>
         <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
-          {count}{hasMore ? '+' : ''} docs
+          {count}
+          {hasMore ? '+' : ''} docs
         </span>
       </div>
       <div className="flex shrink-0 gap-2">
-        <Button variant="ghost" onClick={onRefresh}>Refresh</Button>
-        <Button onClick={onNew} disabled={!canCreate}>New</Button>
+        <Button variant="ghost" onClick={onRefresh}>
+          Refresh
+        </Button>
+        <Button onClick={onNew} disabled={!canCreate}>
+          New
+        </Button>
       </div>
     </div>
   )
@@ -121,7 +128,10 @@ interface DocRowProps {
  */
 function DocRow({ doc, columns, onClick, onOpenRef }: DocRowProps): ReactNode {
   return (
-    <tr onClick={onClick} className="cursor-pointer border-b border-slate-100 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/30">
+    <tr
+      onClick={onClick}
+      className="cursor-pointer border-b border-slate-100 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+    >
       <td className="px-3 py-1.5 font-mono text-slate-500 dark:text-slate-400">{doc.id}</td>
       {columns.map((col) => (
         <td key={col} className="max-w-xs truncate px-3 py-1.5">
@@ -146,7 +156,7 @@ function VirtualBody({
   scrollTop,
   containerHeight,
   onSelect,
-  onOpenRef
+  onOpenRef,
 }: {
   documents: DocumentRecord[]
   columns: string[]
@@ -167,7 +177,7 @@ function VirtualBody({
   return (
     <tbody>
       {paddingTop > 0 && (
-        <tr >
+        <tr>
           <td colSpan={colCount} style={{ height: paddingTop, padding: 0 }} />
         </tr>
       )}
@@ -181,7 +191,7 @@ function VirtualBody({
         />
       ))}
       {paddingBottom > 0 && (
-        <tr >
+        <tr>
           <td colSpan={colCount} style={{ height: paddingBottom, padding: 0 }} />
         </tr>
       )}
@@ -230,7 +240,9 @@ export function DocumentTable(): ReactNode {
     const sentinel = sentinelRef.current
     if (!sentinel || !hasMore || busy) return
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) void loadMoreStable() },
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMoreStable()
+      },
       { threshold: 0.1 }
     )
     observer.observe(sentinel)
@@ -290,7 +302,8 @@ export function DocumentTable(): ReactNode {
                 onClick={() => handleSort('id')}
                 className="group cursor-pointer select-none px-3 py-1.5 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700"
               >
-                id<SortIndicator column="id" sort={sort} />
+                id
+                <SortIndicator column="id" sort={sort} />
               </th>
               {columns.map((col) => (
                 <th
@@ -298,7 +311,8 @@ export function DocumentTable(): ReactNode {
                   onClick={() => handleSort(col)}
                   className="group cursor-pointer select-none px-3 py-1.5 font-semibold hover:bg-slate-200 dark:hover:bg-slate-700"
                 >
-                  {col}<SortIndicator column={col} sort={sort} />
+                  {col}
+                  <SortIndicator column={col} sort={sort} />
                 </th>
               ))}
             </tr>
@@ -314,7 +328,9 @@ export function DocumentTable(): ReactNode {
         </table>
         {documents.length === 0 && !busy && <Empty text="No documents" />}
         {busy && (
-          <div className="py-2 text-center text-xs text-slate-400 dark:text-slate-500">Loading…</div>
+          <div className="py-2 text-center text-xs text-slate-400 dark:text-slate-500">
+            Loading…
+          </div>
         )}
         <div ref={sentinelRef} style={{ height: 1 }} />
       </div>

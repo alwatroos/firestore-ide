@@ -9,7 +9,7 @@ const INEQUALITY_OPERATORS: ReadonlySet<QueryOperator> = new Set<QueryOperator>(
   '<=',
   '>',
   '>=',
-  '!='
+  '!=',
 ])
 
 /** Limit above which a query is flagged as potentially expensive. */
@@ -27,20 +27,28 @@ export function queryWarnings(spec: QuerySpec): string[] {
   const filters = spec.filters ?? []
 
   if (!spec.aggregate && spec.limit === undefined) {
-    warnings.push('No limit set — a default limit is applied, but an unbounded query could read an entire collection.')
+    warnings.push(
+      'No limit set — a default limit is applied, but an unbounded query could read an entire collection.'
+    )
   }
 
   for (const filter of filters) {
     if (FULL_SCAN_OPERATORS.has(filter.operator)) {
-      warnings.push(`Operator "${filter.operator}" on "${filter.field}" cannot use an index efficiently and may scan many documents.`)
+      warnings.push(
+        `Operator "${filter.operator}" on "${filter.field}" cannot use an index efficiently and may scan many documents.`
+      )
     }
   }
 
   const inequalityFields = new Set(
-    filters.filter((filter) => INEQUALITY_OPERATORS.has(filter.operator)).map((filter) => filter.field)
+    filters
+      .filter((filter) => INEQUALITY_OPERATORS.has(filter.operator))
+      .map((filter) => filter.field)
   )
   if (inequalityFields.size > 1) {
-    warnings.push('Inequality filters span multiple fields, which Firestore supports only with composite indexes.')
+    warnings.push(
+      'Inequality filters span multiple fields, which Firestore supports only with composite indexes.'
+    )
   }
 
   if (spec.limit !== undefined && spec.limit > LARGE_LIMIT) {

@@ -4,7 +4,12 @@ import { toQuerySpec } from './querySpec'
 describe('toQuerySpec', () => {
   it('returns a spec with only collectionPath when extras are absent', () => {
     const spec = toQuerySpec({ collectionPath: 'users' })
-    expect(spec).toEqual({ collectionPath: 'users', filters: [], order: undefined, limit: undefined })
+    expect(spec).toEqual({
+      collectionPath: 'users',
+      filters: [],
+      order: undefined,
+      limit: undefined,
+    })
   })
 
   it('carries through filters, order and limit when all are provided', () => {
@@ -12,7 +17,7 @@ describe('toQuerySpec', () => {
       collectionPath: 'orders',
       filters: [{ field: 'status', operator: '==', value: 'active' }],
       order: { field: 'createdAt', direction: 'desc' },
-      limit: 10
+      limit: 10,
     }
     const spec = toQuerySpec(input)
     expect(spec.collectionPath).toBe('orders')
@@ -37,7 +42,9 @@ describe('toQuerySpec', () => {
   })
 
   it('carries the collectionGroup flag only when explicitly true', () => {
-    expect(toQuerySpec({ collectionPath: 'orders', collectionGroup: true }).collectionGroup).toBe(true)
+    expect(toQuerySpec({ collectionPath: 'orders', collectionGroup: true }).collectionGroup).toBe(
+      true
+    )
     expect(toQuerySpec({ collectionPath: 'orders' }).collectionGroup).toBeUndefined()
   })
 

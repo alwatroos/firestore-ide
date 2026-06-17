@@ -6,7 +6,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  useState
+  useState,
 } from 'react'
 
 /** Props for {@link ResizableSplit}. */
@@ -81,7 +81,12 @@ function useDragResize(
  * @param props - Left/right content and optional sizing constraints.
  * @returns The rendered split container.
  */
-export function ResizableSplit({ left, right, initialLeftWidth, minWidth = 160 }: Props): ReactNode {
+export function ResizableSplit({
+  left,
+  right,
+  initialLeftWidth,
+  minWidth = 160,
+}: Props): ReactNode {
   const containerRef = useRef<HTMLDivElement>(null)
   const [leftWidth, setLeftWidth] = useState(initialLeftWidth ?? 0)
   const startDrag = useDragResize(containerRef, minWidth, setLeftWidth)

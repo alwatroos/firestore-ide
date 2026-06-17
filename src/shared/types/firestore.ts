@@ -74,7 +74,7 @@ export const FIELD_MARKERS = {
   /** Document path string — Firestore `DocumentReference`. */
   reference: '_ref',
   /** Base64 string — Firestore `Bytes`/`Buffer`. */
-  bytes: '_bytes'
+  bytes: '_bytes',
 } as const
 
 /** Marker object for a Firestore `Timestamp` (`{ _timestamp: ISO }`). */

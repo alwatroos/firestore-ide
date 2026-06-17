@@ -2,10 +2,10 @@ import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/
 import {
   AggregateField,
   FieldValue,
-  Timestamp,
   type Firestore,
   type Query,
-  type QueryDocumentSnapshot
+  type QueryDocumentSnapshot,
+  Timestamp,
 } from 'firebase-admin/firestore'
 import { getDb } from './clientManager'
 import { assertWritable } from './guard'
@@ -24,7 +24,6 @@ function assertDocumentPath(path: string): void {
     throw new Error(`Not a document path: ${path}`)
   }
 }
-
 
 /**
  * Map a Firestore snapshot to a renderer-safe {@link DocumentRecord}.
@@ -106,17 +105,16 @@ async function runAvgQuery(connectionId: string, spec: QuerySpec): Promise<Docum
  * @param code - JavaScript body (run inside an async IIFE).
  * @returns Document records produced by the snippet.
  */
-export async function runJsQuery(
-  connectionId: string,
-  code: string
-): Promise<DocumentRecord[]> {
+export async function runJsQuery(connectionId: string, code: string): Promise<DocumentRecord[]> {
   // JS snippets can perform writes, so block them entirely while read-only.
   await assertWritable(connectionId)
   const db = await getDb(connectionId)
   // Intentional use of Function constructor — this is a user REPL in a local desktop app.
   // eslint-disable-next-line no-new-func
   const fn = new Function(
-    'db', 'FieldValue', 'Timestamp',
+    'db',
+    'FieldValue',
+    'Timestamp',
     `return (async () => {\n${code}\n})()`
   ) as (db: unknown, fv: unknown, ts: unknown) => Promise<unknown>
   const timeout = new Promise<never>((_, reject) =>
@@ -193,10 +191,7 @@ export async function getDocument(
  * @param spec - Declarative query specification.
  * @returns Matching documents as records, or a count record.
  */
-export async function runQuery(
-  connectionId: string,
-  spec: QuerySpec
-): Promise<DocumentRecord[]> {
+export async function runQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   if (spec.aggregate === 'count') return runCountQuery(connectionId, spec)
   if (spec.aggregate === 'sum') return runSumQuery(connectionId, spec)
   if (spec.aggregate === 'avg') return runAvgQuery(connectionId, spec)

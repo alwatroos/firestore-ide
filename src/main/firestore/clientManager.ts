@@ -1,5 +1,5 @@
-import { cert, deleteApp, initializeApp, type App } from 'firebase-admin/app'
-import { getFirestore, type Firestore } from 'firebase-admin/firestore'
+import { type App, cert, deleteApp, initializeApp } from 'firebase-admin/app'
+import { type Firestore, getFirestore } from 'firebase-admin/firestore'
 import { getCredentials } from '../connections/service'
 
 /** Cache of initialised Firebase apps keyed by connection id. */
@@ -18,7 +18,7 @@ async function getApp(connectionId: string): Promise<App> {
   const credential = cert({
     projectId: account.project_id,
     clientEmail: account.client_email,
-    privateKey: account.private_key
+    privateKey: account.private_key,
   })
   const app = initializeApp({ credential }, connectionId)
   apps.set(connectionId, app)

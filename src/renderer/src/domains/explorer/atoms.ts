@@ -2,7 +2,6 @@ import type { DocumentRecord } from '@shared/types/firestore'
 import { atom } from 'jotai'
 import { type CostTotals, ZERO_COST } from './cost'
 
-
 /** Available tabs in the explorer pane. */
 export type ExplorerTab = 'browse' | 'query' | 'history'
 

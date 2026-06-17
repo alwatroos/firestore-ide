@@ -2,12 +2,7 @@ import type { ConnectionMeta, ConnectionPatch, NewConnectionInput } from './conn
 import type { FileFilter, OpenFileResult, SaveFileResult } from './files'
 import type { DocumentRecord, QuerySpec } from './firestore'
 import type { GeneratedQuery, GenerateQueryInput, OllamaModel } from './ollama'
-import type {
-  QueryHistoryEntry,
-  RecordQueryInput,
-  SavedQuery,
-  SaveQueryInput
-} from './queries'
+import type { QueryHistoryEntry, RecordQueryInput, SavedQuery, SaveQueryInput } from './queries'
 import type { Result } from './result'
 import type { SecurityRules } from './rules'
 import type { DatabaseSchema } from './schema'
@@ -55,7 +50,10 @@ export interface FirestoreIdeApi {
     mode: ImportMode
   ) => Promise<Result<TransferResult>>
   /** Recursively read a collection and its sub-collections into a backup. */
-  readCollection: (connectionId: string, collectionPath: string) => Promise<Result<CollectionBackup>>
+  readCollection: (
+    connectionId: string,
+    collectionPath: string
+  ) => Promise<Result<CollectionBackup>>
   /** Recursively restore a collection backup to its original paths. */
   restoreCollection: (
     connectionId: string,

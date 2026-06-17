@@ -3,11 +3,11 @@ import type {
   ConnectionMeta,
   ConnectionPatch,
   NewConnectionInput,
-  StoredConnection
+  StoredConnection,
 } from '@shared/types/connection'
 import { decryptSecret, encryptSecret } from './crypto'
-import { loadConnections, persistConnections, requireConnection } from './store'
 import { parseServiceAccount, type ServiceAccount, toMeta } from './serialize'
+import { loadConnections, persistConnections, requireConnection } from './store'
 
 /**
  * List all connections as renderer-safe metadata.
@@ -40,7 +40,10 @@ export async function addConnection(input: NewConnectionInput): Promise<Connecti
  * @returns The updated connection's secret-free metadata.
  * @throws If no connection with the given id exists.
  */
-export async function updateConnection(id: string, patch: ConnectionPatch): Promise<ConnectionMeta> {
+export async function updateConnection(
+  id: string,
+  patch: ConnectionPatch
+): Promise<ConnectionMeta> {
   const connections = await loadConnections()
   const index = connections.findIndex((c) => c.id === id)
   if (index === -1) throw new Error(`Connection not found: ${id}`)
@@ -48,7 +51,7 @@ export async function updateConnection(id: string, patch: ConnectionPatch): Prom
   const updated: StoredConnection = {
     ...current,
     ...(patch.name !== undefined ? { name: patch.name } : {}),
-    ...(patch.readOnly !== undefined ? { readOnly: patch.readOnly } : {})
+    ...(patch.readOnly !== undefined ? { readOnly: patch.readOnly } : {}),
   }
   connections[index] = updated
   await persistConnections(connections)
@@ -85,17 +88,13 @@ export async function getCredentials(id: string): Promise<ServiceAccount> {
  * @param rawJson - Original service account JSON to encrypt.
  * @returns A persistable connection record.
  */
-function buildRecord(
-  name: string,
-  account: ServiceAccount,
-  rawJson: string
-): StoredConnection {
+function buildRecord(name: string, account: ServiceAccount, rawJson: string): StoredConnection {
   return {
     id: randomUUID(),
     name,
     projectId: account.project_id,
     clientEmail: account.client_email,
     createdAt: new Date().toISOString(),
-    encryptedCredentials: encryptSecret(rawJson)
+    encryptedCredentials: encryptSecret(rawJson),
   }
 }

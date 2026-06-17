@@ -1,4 +1,4 @@
-import { DocumentReference, GeoPoint, Timestamp } from 'firebase-admin/firestore'
+import { type DocumentReference, GeoPoint, Timestamp } from 'firebase-admin/firestore'
 import { describe, expect, it } from 'vitest'
 import { fromPlain, fromPlainData, toPlain, toPlainData } from './mapper'
 
@@ -62,6 +62,9 @@ describe('fromPlain', () => {
   })
 
   it('does not treat multi-key objects as markers', () => {
-    expect(fromPlain({ _ref: 'users/1', extra: true }, dbStub)).toEqual({ _ref: 'users/1', extra: true })
+    expect(fromPlain({ _ref: 'users/1', extra: true }, dbStub)).toEqual({
+      _ref: 'users/1',
+      extra: true,
+    })
   })
 })

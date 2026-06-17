@@ -3,7 +3,7 @@ import type {
   QueryHistoryEntry,
   RecordQueryInput,
   SavedQuery,
-  SaveQueryInput
+  SaveQueryInput,
 } from '@shared/types/queries'
 import { loadQueries, persistQueries } from './store'
 
@@ -18,7 +18,11 @@ const HISTORY_LIMIT = 100
  */
 export async function recordQuery(input: RecordQueryInput): Promise<QueryHistoryEntry> {
   const store = await loadQueries()
-  const entry: QueryHistoryEntry = { id: randomUUID(), createdAt: new Date().toISOString(), ...input }
+  const entry: QueryHistoryEntry = {
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+    ...input,
+  }
   store.history = [entry, ...store.history].slice(0, HISTORY_LIMIT)
   await persistQueries(store)
   return entry

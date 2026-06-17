@@ -52,7 +52,14 @@ export function IndexHint({ spec, message }: IndexHintProps): ReactNode {
             <Button variant="ghost" onClick={() => void navigator.clipboard.writeText(snippet)}>
               Copy
             </Button>
-            <Button variant="ghost" onClick={() => void api.saveFile('firestore.indexes.json', snippet, [{ name: 'JSON', extensions: ['json'] }])}>
+            <Button
+              variant="ghost"
+              onClick={() =>
+                void api.saveFile('firestore.indexes.json', snippet, [
+                  { name: 'JSON', extensions: ['json'] },
+                ])
+              }
+            >
               Save…
             </Button>
           </div>

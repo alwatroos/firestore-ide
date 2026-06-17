@@ -2,7 +2,7 @@ import type {
   BackupDocument,
   CollectionBackup,
   ImportDoc,
-  ImportMode
+  ImportMode,
 } from '@shared/types/transfer'
 import type { CollectionReference, Firestore } from 'firebase-admin/firestore'
 import { getDb } from './clientManager'

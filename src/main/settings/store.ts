@@ -1,7 +1,7 @@
 import type { AppSettings } from '@shared/types/settings'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
-import { settingsFile } from '../core/paths'
 import { readJson, writeJson } from '../core/jsonFile'
+import { settingsFile } from '../core/paths'
 
 /**
  * Load persisted settings, merged over defaults to tolerate added fields.

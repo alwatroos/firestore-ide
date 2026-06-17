@@ -29,7 +29,7 @@ function Section({ title, children }: { title: string; children: ReactNode }): R
  */
 export function Sidebar({
   onOpenSettings,
-  onOpenRules
+  onOpenRules,
 }: {
   onOpenSettings: () => void
   onOpenRules: () => void
@@ -39,7 +39,12 @@ export function Sidebar({
       <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 py-2">
         <h1 className="text-sm font-bold text-slate-700 dark:text-slate-300">Firestore IDE</h1>
         <div className="flex gap-1">
-          <Button variant="ghost" onClick={onOpenRules} aria-label="Security Rules" title="Security Rules">
+          <Button
+            variant="ghost"
+            onClick={onOpenRules}
+            aria-label="Security Rules"
+            title="Security Rules"
+          >
             🛡
           </Button>
           <Button variant="ghost" onClick={onOpenSettings} aria-label="Settings">

@@ -1,5 +1,5 @@
-import type { ConnectionPatch, NewConnectionInput } from '@shared/types/connection'
 import { IPC } from '@shared/ipc/channels'
+import type { ConnectionPatch, NewConnectionInput } from '@shared/types/connection'
 import { ok } from '@shared/utils/result'
 import { handle } from '../core/ipc'
 import { disposeClient } from '../firestore/clientManager'

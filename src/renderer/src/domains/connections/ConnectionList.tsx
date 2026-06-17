@@ -23,7 +23,13 @@ interface RowProps {
  * @param props - Connection, active flag and handlers.
  * @returns The rendered row.
  */
-function ConnectionRow({ connection, active, onSelect, onToggleReadOnly, onRemove }: RowProps): ReactNode {
+function ConnectionRow({
+  connection,
+  active,
+  onSelect,
+  onToggleReadOnly,
+  onRemove,
+}: RowProps): ReactNode {
   const activeClass = active
     ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700'
     : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -33,9 +39,13 @@ function ConnectionRow({ connection, active, onSelect, onToggleReadOnly, onRemov
       <button type="button" className="min-w-0 flex-1 text-left" onClick={onSelect}>
         <div className="flex items-center gap-1 truncate text-sm font-medium text-slate-800 dark:text-slate-200">
           {connection.name}
-          {readOnly && <span className="text-xs text-amber-600 dark:text-amber-400">read-only</span>}
+          {readOnly && (
+            <span className="text-xs text-amber-600 dark:text-amber-400">read-only</span>
+          )}
         </div>
-        <div className="truncate text-xs text-slate-500 dark:text-slate-400">{connection.projectId}</div>
+        <div className="truncate text-xs text-slate-500 dark:text-slate-400">
+          {connection.projectId}
+        </div>
       </button>
       <button
         type="button"
@@ -79,7 +89,9 @@ export function ConnectionList(): ReactNode {
             connection={connection}
             active={connection.id === activeId}
             onSelect={() => setActiveId(connection.id)}
-            onToggleReadOnly={() => void actions.update(connection.id, { readOnly: !connection.readOnly })}
+            onToggleReadOnly={() =>
+              void actions.update(connection.id, { readOnly: !connection.readOnly })
+            }
             onRemove={() => setPendingRemove(connection)}
           />
         ))}

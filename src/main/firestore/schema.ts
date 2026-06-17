@@ -48,7 +48,7 @@ export function inferFields(samples: Record<string, unknown>[]): FieldSchema[] {
   return [...acc].map(([name, info]) => ({
     name,
     types: [...info.types],
-    occurrences: info.occurrences
+    occurrences: info.occurrences,
   }))
 }
 

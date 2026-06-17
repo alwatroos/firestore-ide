@@ -1,6 +1,6 @@
+import type { DocumentRecord } from '@shared/types/firestore'
 import { useSetAtom } from 'jotai'
 import { useCallback } from 'react'
-import type { DocumentRecord } from '@shared/types/firestore'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { selectedCollectionAtom } from '../explorer/atoms'

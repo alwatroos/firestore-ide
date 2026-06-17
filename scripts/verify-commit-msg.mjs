@@ -13,7 +13,7 @@ const TYPES = [
   'test',
   'build',
   'ci',
-  'revert'
+  'revert',
 ]
 
 /** Matches `type(scope)?!?: subject`, e.g. `feat(ai): add panel`. */
@@ -41,9 +41,9 @@ function readSubject(path) {
  * @returns {never} Never returns; terminates the process.
  */
 function fail(subject) {
-  console.error('\n✖ Invalid commit message:\n  ' + subject)
+  console.error(`\n✖ Invalid commit message:\n  ${subject}`)
   console.error('\n  Expected Conventional Commits format: <type>(scope)?: <subject>')
-  console.error('  Allowed types: ' + TYPES.join(', '))
+  console.error(`  Allowed types: ${TYPES.join(', ')}`)
   console.error('  Example: feat(explorer): add document filtering\n')
   process.exit(1)
 }

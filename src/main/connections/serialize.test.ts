@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { StoredConnection } from '@shared/types/connection'
+import { describe, expect, it } from 'vitest'
 import { parseServiceAccount, toMeta } from './serialize'
 
 describe('toMeta', () => {
@@ -10,7 +10,7 @@ describe('toMeta', () => {
       projectId: 'p',
       clientEmail: 'svc@p.iam',
       createdAt: '2026-01-01T00:00:00.000Z',
-      encryptedCredentials: 'cipher'
+      encryptedCredentials: 'cipher',
     }
     const meta = toMeta(stored)
     expect(meta).not.toHaveProperty('encryptedCredentials')

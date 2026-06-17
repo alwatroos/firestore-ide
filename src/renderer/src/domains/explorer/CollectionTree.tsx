@@ -57,7 +57,9 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
         setChildren(docs.map((doc) => ({ kind: 'document', path: doc.path, label: doc.id })))
       } else {
         const cols = await unwrap(api.listCollections(connectionId, node.path))
-        setChildren(cols.map((name) => ({ kind: 'collection', path: `${node.path}/${name}`, label: name })))
+        setChildren(
+          cols.map((name) => ({ kind: 'collection', path: `${node.path}/${name}`, label: name }))
+        )
       }
     })
   }
@@ -103,7 +105,11 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
         >
           {busy ? '…' : expanded ? '▾' : '▸'}
         </button>
-        <button type="button" className="min-w-0 flex-1 truncate px-1 py-1 text-left" onClick={select}>
+        <button
+          type="button"
+          className="min-w-0 flex-1 truncate px-1 py-1 text-left"
+          onClick={select}
+        >
           <span className="mr-1">{icon}</span>
           {node.label}
         </button>
@@ -120,7 +126,12 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
             </li>
           ) : (
             children.map((child) => (
-              <TreeNode key={child.path} connectionId={connectionId} node={child} depth={depth + 1} />
+              <TreeNode
+                key={child.path}
+                connectionId={connectionId}
+                node={child}
+                depth={depth + 1}
+              />
             ))
           )}
         </ul>

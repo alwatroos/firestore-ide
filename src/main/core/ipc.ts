@@ -1,6 +1,6 @@
-import { ipcMain } from 'electron'
 import type { Result } from '@shared/types/result'
 import { err, toMessage } from '@shared/utils/result'
+import { ipcMain } from 'electron'
 
 /**
  * Register an IPC handler whose result is always wrapped in a {@link Result},

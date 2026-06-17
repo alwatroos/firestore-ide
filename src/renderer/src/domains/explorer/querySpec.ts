@@ -23,6 +23,6 @@ export function toQuerySpec(json: Record<string, unknown>): QuerySpec {
     order: json.order != null ? (json.order as QueryOrder) : undefined,
     limit: typeof json.limit === 'number' ? json.limit : undefined,
     ...(aggregate ? { aggregate } : {}),
-    ...(typeof json.aggregateField === 'string' ? { aggregateField: json.aggregateField } : {})
+    ...(typeof json.aggregateField === 'string' ? { aggregateField: json.aggregateField } : {}),
   }
 }

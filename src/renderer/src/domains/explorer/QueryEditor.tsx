@@ -17,8 +17,8 @@ import { estimateReads } from './cost'
 import { useQueryRunner } from './hooks'
 import { IndexHint } from './IndexHint'
 import { isMissingIndexError } from './indexes'
-import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
+import { queryWarnings } from './queryWarnings'
 import { useTransfer } from './useTransfer'
 
 const JSON_PLACEHOLDER = JSON.stringify(
@@ -26,7 +26,7 @@ const JSON_PLACEHOLDER = JSON.stringify(
     collectionPath: 'users',
     filters: [{ field: 'active', operator: '==', value: true }],
     order: { field: 'createdAt', direction: 'desc' },
-    limit: 50
+    limit: 50,
   },
   null,
   2
@@ -138,7 +138,10 @@ function QueryResultsTable(): ReactNode {
     return (
       <div className="flex flex-wrap items-center justify-center gap-6 p-8">
         {entries.map(([key, value]) => (
-          <div key={key} className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400">
+          <div
+            key={key}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400"
+          >
             <span className="text-4xl font-bold tabular-nums">
               {typeof value === 'number' ? value.toLocaleString() : String(value)}
             </span>
@@ -153,12 +156,22 @@ function QueryResultsTable(): ReactNode {
   return (
     <div className="overflow-auto">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
-        <span>{results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads</span>
+        <span>
+          {results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads
+        </span>
         <span className="flex gap-1">
-          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'json', 'query-results')}>
+          <Button
+            variant="ghost"
+            disabled={exportBusy}
+            onClick={() => void exportRecords(results, 'json', 'query-results')}
+          >
             Export JSON
           </Button>
-          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'csv', 'query-results')}>
+          <Button
+            variant="ghost"
+            disabled={exportBusy}
+            onClick={() => void exportRecords(results, 'csv', 'query-results')}
+          >
             Export CSV
           </Button>
         </span>
@@ -168,7 +181,9 @@ function QueryResultsTable(): ReactNode {
           <tr>
             <th className="px-3 py-1.5 font-semibold">id</th>
             {columns.map((col) => (
-              <th key={col} className="px-3 py-1.5 font-semibold">{col}</th>
+              <th key={col} className="px-3 py-1.5 font-semibold">
+                {col}
+              </th>
             ))}
           </tr>
         </thead>
@@ -234,7 +249,11 @@ export function QueryEditor(): ReactNode {
   const readOnly = useReadOnly()
   const setCollection = useSetAtom(selectedCollectionAtom)
   const setResults = useSetAtom(queryResultsAtom)
-  const { runSpec, error: jsonError, busy: jsonBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
+  const {
+    runSpec,
+    error: jsonError,
+    busy: jsonBusy,
+  } = useQueryRunner(active?.id ?? null, queryResultsAtom)
   const { error: jsError, busy: jsBusy, run: runJs } = useAsync()
   const { record } = useQueryHistory()
   const [mode, setMode] = useAtom(queryModeAtom)
@@ -263,7 +282,14 @@ export function QueryEditor(): ReactNode {
 
   async function handleRun(): Promise<void> {
     if (mode === 'json') {
-      const count = await executeJsonQuery(queryText, collectionGroup, setCollection, setLastSpec, runSpec, setParseError)
+      const count = await executeJsonQuery(
+        queryText,
+        collectionGroup,
+        setCollection,
+        setLastSpec,
+        runSpec,
+        setParseError
+      )
       if (count !== null && active) {
         void record({ connectionId: active.id, kind: 'json', query: queryText, resultCount: count })
       }
@@ -276,14 +302,22 @@ export function QueryEditor(): ReactNode {
       setResults(r)
       return r
     })
-    void record({ connectionId: active.id, kind: 'js', query: queryText, resultCount: results?.length })
+    void record({
+      connectionId: active.id,
+      kind: 'js',
+      query: queryText,
+      resultCount: results?.length,
+    })
   }
 
   return (
     <div className="flex h-full flex-col">
       <QueryToolbar
         mode={mode}
-        onModeChange={(m) => { setMode(m); setParseError(null) }}
+        onModeChange={(m) => {
+          setMode(m)
+          setParseError(null)
+        }}
         onRun={() => void handleRun()}
         busy={busy}
         disabled={runDisabled}
@@ -308,7 +342,9 @@ export function QueryEditor(): ReactNode {
         </label>
       )}
       {mode === 'js' && readOnly && (
-        <WarningList messages={['Read-only mode is on — JS queries are blocked because they can write.']} />
+        <WarningList
+          messages={['Read-only mode is on — JS queries are blocked because they can write.']}
+        />
       )}
       <WarningList messages={warnings} />
       <ErrorBanner message={parseError ?? apiError} />

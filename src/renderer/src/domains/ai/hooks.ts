@@ -1,6 +1,6 @@
+import type { GeneratedQuery, GenerateQueryInput } from '@shared/types/ollama'
 import { useAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
-import type { GeneratedQuery, GenerateQueryInput } from '@shared/types/ollama'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { modelsAtom, selectedModelAtom } from './atoms'
@@ -49,15 +49,24 @@ export function useGenerate() {
 export function useGenerateStream() {
   const { error, busy, run } = useAsync()
   const generate = useCallback(
-    (input: GenerateQueryInput, onChunk: (text: string) => void): Promise<GeneratedQuery | undefined> =>
+    (
+      input: GenerateQueryInput,
+      onChunk: (text: string) => void
+    ): Promise<GeneratedQuery | undefined> =>
       run(
         () =>
           new Promise<GeneratedQuery>((resolve, reject) => {
             const cleanup = api.generateQueryStream(
               input,
               onChunk,
-              (result) => { cleanup(); resolve(result) },
-              (errMsg) => { cleanup(); reject(new Error(errMsg)) }
+              (result) => {
+                cleanup()
+                resolve(result)
+              },
+              (errMsg) => {
+                cleanup()
+                reject(new Error(errMsg))
+              }
             )
           })
       ),

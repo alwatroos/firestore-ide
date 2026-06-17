@@ -1,6 +1,6 @@
+import { Provider } from 'jotai'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Provider } from 'jotai'
 import { App } from './App'
 import './styles.css'
 

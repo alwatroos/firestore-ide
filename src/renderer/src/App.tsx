@@ -84,7 +84,10 @@ export function App(): ReactNode {
 
   return (
     <div className="flex h-screen text-slate-800 dark:bg-slate-950 dark:text-slate-200">
-      <Sidebar onOpenSettings={() => setShowSettings(true)} onOpenRules={() => setShowRules(true)} />
+      <Sidebar
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenRules={() => setShowRules(true)}
+      />
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <MainContent
           connectionId={active?.id ?? null}
@@ -93,7 +96,9 @@ export function App(): ReactNode {
         />
       </main>
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
-      {showRules && <RulesDialog connectionId={active?.id ?? null} onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <RulesDialog connectionId={active?.id ?? null} onClose={() => setShowRules(false)} />
+      )}
     </div>
   )
 }

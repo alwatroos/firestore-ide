@@ -14,9 +14,7 @@ export function parseQuerySpec(raw: string): QuerySpec {
   }
   const validAggregates: QueryAggregate[] = ['count', 'sum', 'avg']
   const aggregate =
-    parsed.aggregate && validAggregates.includes(parsed.aggregate)
-      ? parsed.aggregate
-      : undefined
+    parsed.aggregate && validAggregates.includes(parsed.aggregate) ? parsed.aggregate : undefined
   return {
     collectionPath: parsed.collectionPath,
     ...(parsed.collectionGroup === true ? { collectionGroup: true } : {}),
@@ -24,6 +22,6 @@ export function parseQuerySpec(raw: string): QuerySpec {
     order: parsed.order ?? undefined,
     limit: typeof parsed.limit === 'number' ? parsed.limit : undefined,
     aggregate,
-    aggregateField: typeof parsed.aggregateField === 'string' ? parsed.aggregateField : undefined
+    aggregateField: typeof parsed.aggregateField === 'string' ? parsed.aggregateField : undefined,
   }
 }

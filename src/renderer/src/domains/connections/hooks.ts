@@ -1,6 +1,6 @@
+import type { ConnectionPatch, NewConnectionInput } from '@shared/types/connection'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
-import type { ConnectionPatch, NewConnectionInput } from '@shared/types/connection'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
 import { settingsAtom } from '../settings/atoms'

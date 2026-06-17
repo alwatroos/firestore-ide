@@ -1,6 +1,6 @@
 import type { StoredConnection } from '@shared/types/connection'
-import { connectionsFile } from '../core/paths'
 import { readJson, writeJson } from '../core/jsonFile'
+import { connectionsFile } from '../core/paths'
 
 /**
  * Load all persisted connections from disk.

@@ -23,7 +23,7 @@ export interface IndexDefinition {
 /** Operators that require an array index configuration. */
 const ARRAY_OPERATORS: ReadonlySet<QueryOperator> = new Set<QueryOperator>([
   'array-contains',
-  'array-contains-any'
+  'array-contains-any',
 ])
 
 /**
@@ -63,21 +63,23 @@ export function buildIndexDefinition(spec: QuerySpec): IndexDefinition {
   const others = (spec.filters ?? []).filter((filter) => filter.operator !== '==')
 
   for (const filter of [...equality, ...others]) {
-    if (ARRAY_OPERATORS.has(filter.operator)) byPath.set(filter.field, { fieldPath: filter.field, arrayConfig: 'CONTAINS' })
-    else if (!byPath.has(filter.field)) byPath.set(filter.field, { fieldPath: filter.field, order: 'ASCENDING' })
+    if (ARRAY_OPERATORS.has(filter.operator))
+      byPath.set(filter.field, { fieldPath: filter.field, arrayConfig: 'CONTAINS' })
+    else if (!byPath.has(filter.field))
+      byPath.set(filter.field, { fieldPath: filter.field, order: 'ASCENDING' })
   }
 
   if (spec.order) {
     byPath.set(spec.order.field, {
       fieldPath: spec.order.field,
-      order: spec.order.direction === 'desc' ? 'DESCENDING' : 'ASCENDING'
+      order: spec.order.direction === 'desc' ? 'DESCENDING' : 'ASCENDING',
     })
   }
 
   return {
     collectionGroup: leaf,
     queryScope: spec.collectionGroup ? 'COLLECTION_GROUP' : 'COLLECTION',
-    fields: [...byPath.values()]
+    fields: [...byPath.values()],
   }
 }
 

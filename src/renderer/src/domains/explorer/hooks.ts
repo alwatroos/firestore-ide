@@ -16,7 +16,10 @@ const PAGE_SIZE = 50
  */
 export function useCostTracker(): (delta: Partial<CostTotals>) => void {
   const setCost = useSetAtom(sessionCostAtom)
-  return useCallback((delta: Partial<CostTotals>) => setCost((prev) => addCost(prev, delta)), [setCost])
+  return useCallback(
+    (delta: Partial<CostTotals>) => setCost((prev) => addCost(prev, delta)),
+    [setCost]
+  )
 }
 
 /**

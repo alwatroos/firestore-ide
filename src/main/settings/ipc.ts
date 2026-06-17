@@ -1,5 +1,5 @@
-import type { AppSettings } from '@shared/types/settings'
 import { IPC } from '@shared/ipc/channels'
+import type { AppSettings } from '@shared/types/settings'
 import { ok } from '@shared/utils/result'
 import { handle } from '../core/ipc'
 import { loadSettings, saveSettings } from './store'

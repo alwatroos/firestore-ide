@@ -1,7 +1,7 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IPC } from '@shared/ipc/channels'
 import type { FirestoreIdeApi } from '@shared/types/api'
 import type { GeneratedQuery } from '@shared/types/ollama'
+import { contextBridge, type IpcRendererEvent, ipcRenderer } from 'electron'
 
 /**
  * The renderer-facing API. Every method is a thin `ipcRenderer.invoke` wrapper;
@@ -61,7 +61,7 @@ const api: FirestoreIdeApi = {
   deleteSavedQuery: (id) => ipcRenderer.invoke(IPC.queriesDeleteSaved, id),
   getActiveRules: (id) => ipcRenderer.invoke(IPC.rulesGetActive, id),
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
-  saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings)
+  saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings),
 }
 
 contextBridge.exposeInMainWorld('api', api)
