@@ -1,15 +1,17 @@
 import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useState } from 'react'
-import { Button, Empty, ErrorBanner } from '../../components/ui'
+import { type ReactNode, useMemo, useState } from 'react'
+import { Button, Empty, ErrorBanner, WarningList } from '../../components/ui'
 import { api, unwrap } from '../../lib/api'
 import { parseJsonObject } from '../../lib/json'
 import { useAsync } from '../../lib/useAsync'
 import { activeConnectionAtom } from '../connections/atoms'
+import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
 import { queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
 import { collectColumns, formatCell } from './columns'
 import { useQueryRunner } from './hooks'
+import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
 
 const JSON_PLACEHOLDER = JSON.stringify(
@@ -195,6 +197,7 @@ async function executeJsonQuery(
  */
 export function QueryEditor(): ReactNode {
   const active = useAtomValue(activeConnectionAtom)
+  const readOnly = useReadOnly()
   const setCollection = useSetAtom(selectedCollectionAtom)
   const setResults = useSetAtom(queryResultsAtom)
   const { runSpec, error: jsonError, busy: jsonBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
@@ -205,6 +208,21 @@ export function QueryEditor(): ReactNode {
 
   const busy = mode === 'json' ? jsonBusy : jsBusy
   const apiError = mode === 'json' ? jsonError : jsError
+
+  // Best-effort, non-blocking cost/efficiency hints for the JSON spec being typed.
+  const warnings = useMemo(() => {
+    if (mode !== 'json' || !queryText.trim()) return []
+    const parsed = parseJsonObject(queryText)
+    if (!parsed.ok) return []
+    try {
+      return queryWarnings(toQuerySpec(parsed.value))
+    } catch {
+      return []
+    }
+  }, [mode, queryText])
+
+  // JS snippets can write, so they are blocked while read-only.
+  const runDisabled = !queryText.trim() || !active || (mode === 'js' && readOnly)
 
   function handleRun() {
     if (mode === 'json') {
@@ -226,7 +244,7 @@ export function QueryEditor(): ReactNode {
         onModeChange={(m) => { setMode(m); setParseError(null) }}
         onRun={handleRun}
         busy={busy}
-        disabled={!queryText.trim() || !active}
+        disabled={runDisabled}
       />
       <textarea
         key={mode}
@@ -237,6 +255,10 @@ export function QueryEditor(): ReactNode {
         value={queryText}
         onChange={(e) => setQueryText(e.target.value)}
       />
+      {mode === 'js' && readOnly && (
+        <WarningList messages={['Read-only mode is on — JS queries are blocked because they can write.']} />
+      )}
+      <WarningList messages={warnings} />
       <ErrorBanner message={parseError ?? apiError} />
       <div className="min-h-0 flex-1 overflow-auto">
         <QueryResultsTable />

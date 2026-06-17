@@ -1,9 +1,10 @@
-import { useAtom, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
-import type { NewConnectionInput } from '@shared/types/connection'
+import type { ConnectionPatch, NewConnectionInput } from '@shared/types/connection'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
-import { activeConnectionIdAtom, connectionsAtom } from './atoms'
+import { settingsAtom } from '../settings/atoms'
+import { activeConnectionAtom, activeConnectionIdAtom, connectionsAtom } from './atoms'
 
 /**
  * Build a stable action that reloads the connection list into shared state.
@@ -59,6 +60,26 @@ export function useConnectionActions(onChange: () => void) {
       }),
     [run, onChange]
   )
+  const update = useCallback(
+    (id: string, patch: ConnectionPatch) =>
+      run(async () => {
+        await unwrap(api.updateConnection(id, patch))
+        onChange()
+      }),
+    [run, onChange]
+  )
   const test = useCallback((id: string) => run(() => unwrap(api.testConnection(id))), [run])
-  return { add, remove, test, error, busy }
+  return { add, remove, update, test, error, busy }
+}
+
+/**
+ * Resolve whether the active connection is currently write-protected, honouring
+ * both the global read-only switch and the per-connection flag.
+ *
+ * @returns True when writes should be blocked in the UI.
+ */
+export function useReadOnly(): boolean {
+  const settings = useAtomValue(settingsAtom)
+  const active = useAtomValue(activeConnectionAtom)
+  return settings.readOnly || active?.readOnly === true
 }

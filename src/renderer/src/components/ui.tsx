@@ -51,6 +51,23 @@ export function Empty({ text }: { text: string }): ReactNode {
   return <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">{text}</div>
 }
 
+/**
+ * An amber advisory banner listing non-blocking warnings (e.g. query cost hints).
+ *
+ * @param props - The warning messages; renders nothing when empty.
+ * @returns The banner, or `null`.
+ */
+export function WarningList({ messages }: { messages: string[] }): ReactNode {
+  if (messages.length === 0) return null
+  return (
+    <ul className="space-y-0.5 rounded bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+      {messages.map((message) => (
+        <li key={message}>⚠ {message}</li>
+      ))}
+    </ul>
+  )
+}
+
 /** Props for {@link ConfirmDialog}. */
 interface ConfirmDialogProps {
   /** Dialog heading. */

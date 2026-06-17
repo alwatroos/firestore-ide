@@ -1,7 +1,8 @@
 import { useAtom } from 'jotai'
 import { type ReactNode, useEffect, useState } from 'react'
-import { Button, Empty, ErrorBanner } from '../../components/ui'
+import { Button, ConfirmDialog, Empty, ErrorBanner } from '../../components/ui'
 import { parseJsonObject } from '../../lib/json'
+import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from './atoms'
 import { useDocumentMutations } from './hooks'
 
@@ -23,6 +24,8 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
   const [selected, setSelected] = useAtom(selectedDocumentAtom)
   const [draft, setDraft] = useState('')
   const [parseError, setParseError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const readOnly = useReadOnly()
   const { save, remove, error, busy } = useDocumentMutations(connectionId, onSaved)
 
   useEffect(() => {
@@ -45,12 +48,13 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
   }
 
   /**
-   * Delete the document and clear the selection.
+   * Delete the document, clear the selection and close the confirmation.
    *
    * @returns Resolves once deleted.
    */
   async function onDelete(): Promise<void> {
     await remove(doc.path)
+    setConfirmDelete(false)
     setSelected(null)
   }
 
@@ -58,11 +62,12 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
     <section className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-2">
         <code className="min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">{selected.path}</code>
-        <div className="ml-2 flex shrink-0 gap-2">
-          <Button onClick={() => void onSave()} disabled={busy}>
+        <div className="ml-2 flex shrink-0 items-center gap-2">
+          {readOnly && <span className="text-xs text-amber-600 dark:text-amber-400">read-only</span>}
+          <Button onClick={() => void onSave()} disabled={busy || readOnly}>
             Save
           </Button>
-          <Button variant="danger" onClick={() => void onDelete()} disabled={busy}>
+          <Button variant="danger" onClick={() => setConfirmDelete(true)} disabled={busy || readOnly}>
             Delete
           </Button>
           <Button variant="ghost" onClick={() => setSelected(null)} title="Close editor" aria-label="Close editor">
@@ -72,6 +77,7 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
       </header>
       <textarea
         spellCheck={false}
+        readOnly={readOnly}
         className="flex-1 resize-none bg-white dark:bg-slate-950 dark:text-slate-300 p-4 font-mono text-xs outline-none"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
@@ -79,6 +85,22 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
       <div className="space-y-1 px-4 pb-3">
         <ErrorBanner message={parseError ?? error} />
       </div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete document?"
+          confirmLabel="Delete"
+          danger
+          busy={busy}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => void onDelete()}
+        >
+          <p className="mb-2">This permanently deletes:</p>
+          <code className="block break-all rounded bg-slate-100 dark:bg-slate-900 px-2 py-1 text-xs">{doc.path}</code>
+          <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-100 dark:bg-slate-900 p-2 font-mono text-xs">
+            {JSON.stringify(doc.data, null, 2)}
+          </pre>
+        </ConfirmDialog>
+      )}
     </section>
   )
 }

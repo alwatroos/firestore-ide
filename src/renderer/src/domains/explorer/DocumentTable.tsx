@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Empty, ErrorBanner } from '../../components/ui'
 import { activeConnectionAtom } from '../connections/atoms'
+import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
 import { selectedCollectionAtom } from './atoms'
 import { collectColumns, formatCell } from './columns'
@@ -53,6 +54,7 @@ interface ToolbarProps {
   name: string
   count: number
   hasMore: boolean
+  canCreate: boolean
   onNew: () => void
   onRefresh: () => void
 }
@@ -63,7 +65,7 @@ interface ToolbarProps {
  * @param props - Collection name, count and action handlers.
  * @returns The rendered toolbar.
  */
-function Toolbar({ name, count, hasMore, onNew, onRefresh }: ToolbarProps): ReactNode {
+function Toolbar({ name, count, hasMore, canCreate, onNew, onRefresh }: ToolbarProps): ReactNode {
   return (
     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-2">
       <div className="flex min-w-0 items-center gap-2">
@@ -74,7 +76,7 @@ function Toolbar({ name, count, hasMore, onNew, onRefresh }: ToolbarProps): Reac
       </div>
       <div className="flex shrink-0 gap-2">
         <Button variant="ghost" onClick={onRefresh}>Refresh</Button>
-        <Button onClick={onNew}>New</Button>
+        <Button onClick={onNew} disabled={!canCreate}>New</Button>
       </div>
     </div>
   )
@@ -196,6 +198,7 @@ export function DocumentTable(): ReactNode {
     collection
   )
   const setDocument = useSetAtom(selectedDocumentAtom)
+  const readOnly = useReadOnly()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -259,6 +262,7 @@ export function DocumentTable(): ReactNode {
         name={collection}
         count={documents.length}
         hasMore={hasMore}
+        canCreate={!readOnly}
         onRefresh={() => void refresh()}
         onNew={() => setDocument(blankDocument(collection))}
       />
