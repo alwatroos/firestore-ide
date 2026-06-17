@@ -17,6 +17,7 @@ export const IPC = {
   firestoreDeleteDocument: 'firestore:deleteDocument',
   firestoreImportDocuments: 'firestore:importDocuments',
   firestoreReadCollection: 'firestore:readCollection',
+  firestoreRestoreCollection: 'firestore:restoreCollection',
   firestoreGetSchema: 'firestore:getSchema',
   filesSave: 'files:save',
   filesOpen: 'files:open',

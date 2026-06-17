@@ -22,6 +22,11 @@ const api: FirestoreIdeApi = {
   runJsQuery: (id, code) => ipcRenderer.invoke(IPC.firestoreRunJsQuery, id, code),
   saveDocument: (id, doc) => ipcRenderer.invoke(IPC.firestoreSaveDocument, id, doc),
   deleteDocument: (id, path) => ipcRenderer.invoke(IPC.firestoreDeleteDocument, id, path),
+  importDocuments: (id, path, docs, mode) =>
+    ipcRenderer.invoke(IPC.firestoreImportDocuments, id, path, docs, mode),
+  readCollection: (id, path) => ipcRenderer.invoke(IPC.firestoreReadCollection, id, path),
+  restoreCollection: (id, backup, mode) =>
+    ipcRenderer.invoke(IPC.firestoreRestoreCollection, id, backup, mode),
   getSchema: (id) => ipcRenderer.invoke(IPC.firestoreGetSchema, id),
   listModels: (host) => ipcRenderer.invoke(IPC.ollamaListModels, host),
   generateQuery: (input) => ipcRenderer.invoke(IPC.ollamaGenerateQuery, input),

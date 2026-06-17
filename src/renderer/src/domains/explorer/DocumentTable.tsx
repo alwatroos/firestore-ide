@@ -10,6 +10,7 @@ import { selectedCollectionAtom } from './atoms'
 import { CellValue } from './CellValue'
 import { collectColumns } from './columns'
 import { useDocuments } from './hooks'
+import { TransferControls } from './TransferControls'
 
 /** Approximate height of each data row in pixels (matches py-1.5 + text-xs). */
 const ROW_HEIGHT = 28
@@ -273,6 +274,9 @@ export function DocumentTable(): ReactNode {
         onRefresh={() => void refresh()}
         onNew={() => setDocument(blankDocument(collection))}
       />
+      <div className="flex shrink-0 items-center gap-1 border-b border-slate-200 dark:border-slate-700 px-4 py-1">
+        <TransferControls />
+      </div>
       <ErrorBanner message={error} />
       <div
         ref={containerRef}

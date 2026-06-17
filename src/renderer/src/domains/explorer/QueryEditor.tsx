@@ -18,6 +18,7 @@ import { IndexHint } from './IndexHint'
 import { isMissingIndexError } from './indexes'
 import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
+import { useTransfer } from './useTransfer'
 
 const JSON_PLACEHOLDER = JSON.stringify(
   {
@@ -126,6 +127,7 @@ function QueryResultsTable(): ReactNode {
   const setDocument = useSetAtom(selectedDocumentAtom)
   const active = useAtomValue(activeConnectionAtom)
   const { open: openRef } = useOpenDocument(active?.id ?? null)
+  const { exportRecords, busy: exportBusy } = useTransfer(active?.id ?? null)
 
   if (results.length === 0) return <Empty text="Run a query to see results" />
 
@@ -149,8 +151,16 @@ function QueryResultsTable(): ReactNode {
   const columns = collectColumns(results)
   return (
     <div className="overflow-auto">
-      <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
-        {results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
+        <span>{results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads</span>
+        <span className="flex gap-1">
+          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'json', 'query-results')}>
+            Export JSON
+          </Button>
+          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'csv', 'query-results')}>
+            Export CSV
+          </Button>
+        </span>
       </div>
       <table className="w-full border-collapse text-left text-xs">
         <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">

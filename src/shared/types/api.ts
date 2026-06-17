@@ -5,6 +5,7 @@ import type { GeneratedQuery, GenerateQueryInput, OllamaModel } from './ollama'
 import type { Result } from './result'
 import type { DatabaseSchema } from './schema'
 import type { AppSettings } from './settings'
+import type { CollectionBackup, ImportDoc, ImportMode, TransferResult } from './transfer'
 
 /**
  * The complete, type-safe surface exposed to the renderer via `window.api`.
@@ -39,6 +40,21 @@ export interface FirestoreIdeApi {
   saveDocument: (connectionId: string, doc: DocumentRecord) => Promise<Result<DocumentRecord>>
   /** Delete a document by path. */
   deleteDocument: (connectionId: string, path: string) => Promise<Result<void>>
+  /** Import documents into a collection (batched), overwriting or merging. */
+  importDocuments: (
+    connectionId: string,
+    collectionPath: string,
+    docs: ImportDoc[],
+    mode: ImportMode
+  ) => Promise<Result<TransferResult>>
+  /** Recursively read a collection and its sub-collections into a backup. */
+  readCollection: (connectionId: string, collectionPath: string) => Promise<Result<CollectionBackup>>
+  /** Recursively restore a collection backup to its original paths. */
+  restoreCollection: (
+    connectionId: string,
+    backup: CollectionBackup,
+    mode: ImportMode
+  ) => Promise<Result<TransferResult>>
   /** Infer and return an AI-ready schema snapshot. */
   getSchema: (connectionId: string) => Promise<Result<DatabaseSchema>>
   /** List models available on an Ollama host. */
