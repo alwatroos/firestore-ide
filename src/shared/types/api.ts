@@ -1,4 +1,5 @@
-import type { ConnectionMeta, NewConnectionInput } from './connection'
+import type { ConnectionMeta, ConnectionPatch, NewConnectionInput } from './connection'
+import type { FileFilter, OpenFileResult, SaveFileResult } from './files'
 import type { DocumentRecord, QuerySpec } from './firestore'
 import type { GeneratedQuery, GenerateQueryInput, OllamaModel } from './ollama'
 import type { Result } from './result'
@@ -15,6 +16,8 @@ export interface FirestoreIdeApi {
   listConnections: () => Promise<Result<ConnectionMeta[]>>
   /** Register a new connection from a service account key. */
   addConnection: (input: NewConnectionInput) => Promise<Result<ConnectionMeta>>
+  /** Apply a secret-free patch (name, read-only flag) to a connection. */
+  updateConnection: (id: string, patch: ConnectionPatch) => Promise<Result<ConnectionMeta>>
   /** Remove a connection and dispose its Firestore client. */
   removeConnection: (id: string) => Promise<Result<void>>
   /** Verify a connection can reach Firestore. */
@@ -28,6 +31,8 @@ export interface FirestoreIdeApi {
     limit?: number,
     offset?: number
   ) => Promise<Result<DocumentRecord[]>>
+  /** Fetch a single document by path (used to follow references). */
+  getDocument: (connectionId: string, path: string) => Promise<Result<DocumentRecord | null>>
   /** Run a declarative query. */
   runQuery: (connectionId: string, spec: QuerySpec) => Promise<Result<DocumentRecord[]>>
   /** Create or fully overwrite a document. */
@@ -52,6 +57,14 @@ export interface FirestoreIdeApi {
     onDone: (result: GeneratedQuery) => void,
     onError: (error: string) => void
   ) => () => void
+  /** Save text to a user-chosen file via a native dialog. */
+  saveFile: (
+    suggestedName: string,
+    content: string,
+    filters?: FileFilter[]
+  ) => Promise<Result<SaveFileResult>>
+  /** Open and read a user-chosen file via a native dialog. */
+  openFile: (filters?: FileFilter[]) => Promise<Result<OpenFileResult>>
   /** Read persisted application settings. */
   getSettings: () => Promise<Result<AppSettings>>
   /** Persist application settings. */

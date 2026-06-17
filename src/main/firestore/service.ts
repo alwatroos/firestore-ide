@@ -1,8 +1,22 @@
 import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
 import { AggregateField, FieldValue, Timestamp, type QueryDocumentSnapshot } from 'firebase-admin/firestore'
 import { getDb } from './clientManager'
-import { toPlainData } from './mapper'
+import { assertWritable } from './guard'
+import { fromPlainData, toPlainData } from './mapper'
 import { applyFiltersOnly, applySpec, clampLimit } from './queryBuilder'
+
+/**
+ * Validate that a path points at a document (even segment count), not a collection.
+ *
+ * @param path - Slash-delimited Firestore path.
+ * @throws If the path does not address a document.
+ */
+function assertDocumentPath(path: string): void {
+  const segments = path.split('/').filter(Boolean)
+  if (segments.length === 0 || segments.length % 2 !== 0) {
+    throw new Error(`Not a document path: ${path}`)
+  }
+}
 
 
 /**
@@ -72,6 +86,8 @@ export async function runJsQuery(
   connectionId: string,
   code: string
 ): Promise<DocumentRecord[]> {
+  // JS snippets can perform writes, so block them entirely while read-only.
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
   // Intentional use of Function constructor — this is a user REPL in a local desktop app.
   // eslint-disable-next-line no-new-func
@@ -128,6 +144,24 @@ export async function listDocuments(
 }
 
 /**
+ * Fetch a single document by its full path.
+ *
+ * @param connectionId - Target connection.
+ * @param path - Full document path (even number of segments).
+ * @returns The document record, or `null` when it does not exist.
+ */
+export async function getDocument(
+  connectionId: string,
+  path: string
+): Promise<DocumentRecord | null> {
+  assertDocumentPath(path)
+  const db = await getDb(connectionId)
+  const snap = await db.doc(path).get()
+  if (!snap.exists) return null
+  return { id: snap.id, path: snap.ref.path, data: toPlainData(snap.data() ?? {}) }
+}
+
+/**
  * Execute a declarative query against a collection.
  * When `spec.aggregate === 'count'`, returns a single synthetic count record.
  *
@@ -158,8 +192,9 @@ export async function saveDocument(
   connectionId: string,
   doc: DocumentRecord
 ): Promise<DocumentRecord> {
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
-  await db.doc(doc.path).set(doc.data)
+  await db.doc(doc.path).set(fromPlainData(doc.data, db))
   return doc
 }
 
@@ -171,6 +206,7 @@ export async function saveDocument(
  * @returns Resolves once deleted.
  */
 export async function deleteDocument(connectionId: string, path: string): Promise<void> {
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
   await db.doc(path).delete()
 }

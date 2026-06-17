@@ -10,12 +10,14 @@ import type { GeneratedQuery } from '@shared/types/ollama'
 const api: FirestoreIdeApi = {
   listConnections: () => ipcRenderer.invoke(IPC.connectionsList),
   addConnection: (input) => ipcRenderer.invoke(IPC.connectionsAdd, input),
+  updateConnection: (id, patch) => ipcRenderer.invoke(IPC.connectionsUpdate, id, patch),
   removeConnection: (id) => ipcRenderer.invoke(IPC.connectionsRemove, id),
   testConnection: (id) => ipcRenderer.invoke(IPC.connectionsTest, id),
   listCollections: (id, parentPath) =>
     ipcRenderer.invoke(IPC.firestoreListCollections, id, parentPath),
   listDocuments: (id, path, limit, offset) =>
     ipcRenderer.invoke(IPC.firestoreListDocuments, id, path, limit, offset),
+  getDocument: (id, path) => ipcRenderer.invoke(IPC.firestoreGetDocument, id, path),
   runQuery: (id, spec) => ipcRenderer.invoke(IPC.firestoreRunQuery, id, spec),
   runJsQuery: (id, code) => ipcRenderer.invoke(IPC.firestoreRunJsQuery, id, code),
   saveDocument: (id, doc) => ipcRenderer.invoke(IPC.firestoreSaveDocument, id, doc),
@@ -44,6 +46,9 @@ const api: FirestoreIdeApi = {
     ipcRenderer.send(IPC.ollamaGenerateQueryStream, input)
     return cleanup
   },
+  saveFile: (suggestedName, content, filters) =>
+    ipcRenderer.invoke(IPC.filesSave, suggestedName, content, filters),
+  openFile: (filters) => ipcRenderer.invoke(IPC.filesOpen, filters),
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
   saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings)
 }

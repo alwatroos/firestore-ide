@@ -53,6 +53,42 @@ export interface QuerySpec {
  */
 export const COUNT_SENTINEL_ID = '__count__'
 
+/**
+ * Field markers used to round-trip Firestore-native types through plain JSON.
+ * A marker is an object with exactly one of these keys; this lets the renderer
+ * display, and the import/save path revive, types that JSON cannot represent.
+ */
+export const FIELD_MARKERS = {
+  /** ISO-8601 string — Firestore `Timestamp`. */
+  timestamp: '_timestamp',
+  /** `[latitude, longitude]` tuple — Firestore `GeoPoint`. */
+  geopoint: '_geopoint',
+  /** Document path string — Firestore `DocumentReference`. */
+  reference: '_ref',
+  /** Base64 string — Firestore `Bytes`/`Buffer`. */
+  bytes: '_bytes'
+} as const
+
+/** Marker object for a Firestore `Timestamp` (`{ _timestamp: ISO }`). */
+export interface TimestampMarker {
+  _timestamp: string
+}
+
+/** Marker object for a Firestore `GeoPoint` (`{ _geopoint: [lat, lng] }`). */
+export interface GeoPointMarker {
+  _geopoint: [number, number]
+}
+
+/** Marker object for a `DocumentReference` (`{ _ref: "path" }`). */
+export interface ReferenceMarker {
+  _ref: string
+}
+
+/** Marker object for Firestore `Bytes` (`{ _bytes: base64 }`). */
+export interface BytesMarker {
+  _bytes: string
+}
+
 /** A Firestore document flattened for display and editing. */
 export interface DocumentRecord {
   /** Document id (last path segment). */

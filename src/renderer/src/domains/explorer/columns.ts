@@ -1,4 +1,5 @@
 import type { DocumentRecord } from '@shared/types/firestore'
+import { formatMarker, markerKind } from '@shared/utils/markers'
 
 /**
  * Collect a bounded, stable set of column keys across the given documents.
@@ -23,6 +24,10 @@ export function collectColumns(docs: DocumentRecord[], max = 8): string[] {
  */
 export function formatCell(value: unknown): string {
   if (value === null || value === undefined) return ''
-  if (typeof value === 'object') return JSON.stringify(value)
+  if (typeof value === 'object') {
+    const kind = markerKind(value)
+    if (kind) return formatMarker(value as Record<string, unknown>, kind)
+    return JSON.stringify(value)
+  }
   return String(value)
 }

@@ -6,6 +6,7 @@ import { loadSettings } from '../settings/store'
 import { inferSchema } from './schema'
 import {
   deleteDocument,
+  getDocument,
   listCollections,
   listDocuments,
   runJsQuery,
@@ -24,6 +25,9 @@ export function registerFirestoreIpc(): void {
   )
   handle(IPC.firestoreListDocuments, async (id: string, path: string, limit?: number, offset?: number) =>
     ok(await listDocuments(id, path, limit, offset))
+  )
+  handle(IPC.firestoreGetDocument, async (id: string, path: string) =>
+    ok(await getDocument(id, path))
   )
   handle(IPC.firestoreRunQuery, async (id: string, spec: QuerySpec) =>
     ok(await runQuery(id, spec))
