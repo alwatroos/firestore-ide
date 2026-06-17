@@ -36,6 +36,22 @@ export async function getDb(connectionId: string): Promise<Firestore> {
 }
 
 /**
+ * Mint an OAuth2 access token for a connection's service account. The admin
+ * credential's scopes include `cloud-platform`, covering the Rules API.
+ *
+ * @param connectionId - Connection id.
+ * @returns A bearer access token string.
+ * @throws If the app has no usable credential.
+ */
+export async function getAccessToken(connectionId: string): Promise<string> {
+  const app = await getApp(connectionId)
+  const credential = app.options.credential
+  if (!credential) throw new Error('No credential available for this connection')
+  const token = await credential.getAccessToken()
+  return token.access_token
+}
+
+/**
  * Dispose the Firebase app for a connection, releasing its resources.
  *
  * @param connectionId - Connection id whose app should be torn down.

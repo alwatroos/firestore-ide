@@ -11,6 +11,8 @@ export interface AppSettings {
   schemaSampleSize: number
   /** UI color theme; `system` follows the OS preference. */
   theme: Theme
+  /** Global read-only switch; blocks all writes across every connection. */
+  readOnly: boolean
 }
 
 /** Default settings applied on first launch. */
@@ -18,5 +20,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ollamaHost: 'http://127.0.0.1:11434',
   defaultModel: null,
   schemaSampleSize: 25,
-  theme: 'system'
+  theme: 'system',
+  readOnly: false
 }

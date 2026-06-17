@@ -19,6 +19,8 @@ const SYSTEM_INSTRUCTIONS = [
   'Use "aggregate":"sum" + "aggregateField":"fieldName" to sum a numeric field (e.g. "total", "suma").',
   'Use "aggregate":"avg" + "aggregateField":"fieldName" to average a numeric field (e.g. "average", "mean", "średnia").',
   'Use only collections and fields from the provided database schema.',
+  'For a collection group query (all sub-collections sharing one id, regardless of parent),',
+  'set "collectionGroup": true and use the bare collection id as "collectionPath".',
   'Valid operators: ==, !=, <, <=, >, >=, array-contains, in, array-contains-any.',
   'Respond with JSON only, no prose.'
 ].join(' ')

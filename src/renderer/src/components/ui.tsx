@@ -50,3 +50,75 @@ export function ErrorBanner({ message }: { message: string | null }): ReactNode 
 export function Empty({ text }: { text: string }): ReactNode {
   return <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">{text}</div>
 }
+
+/**
+ * An amber advisory banner listing non-blocking warnings (e.g. query cost hints).
+ *
+ * @param props - The warning messages; renders nothing when empty.
+ * @returns The banner, or `null`.
+ */
+export function WarningList({ messages }: { messages: string[] }): ReactNode {
+  if (messages.length === 0) return null
+  return (
+    <ul className="space-y-0.5 rounded bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+      {messages.map((message) => (
+        <li key={message}>⚠ {message}</li>
+      ))}
+    </ul>
+  )
+}
+
+/** Props for {@link ConfirmDialog}. */
+interface ConfirmDialogProps {
+  /** Dialog heading. */
+  title: string
+  /** Optional rich body (e.g. a preview of what will change). */
+  children?: ReactNode
+  /** Confirm button label (defaults to `Confirm`). */
+  confirmLabel?: string
+  /** When true, the confirm button uses the destructive style. */
+  danger?: boolean
+  /** Disables the confirm button while an action is in flight. */
+  busy?: boolean
+  /** Invoked when the user confirms. */
+  onConfirm: () => void
+  /** Invoked when the user cancels or dismisses. */
+  onCancel: () => void
+}
+
+/**
+ * A modal confirmation dialog with an optional preview body. Used to guard
+ * destructive operations (delete, bulk import/restore).
+ *
+ * @param props - See {@link ConfirmDialogProps}.
+ * @returns The rendered modal.
+ */
+export function ConfirmDialog({
+  title,
+  children,
+  confirmLabel = 'Confirm',
+  danger = false,
+  busy = false,
+  onConfirm,
+  onCancel
+}: ConfirmDialogProps): ReactNode {
+  return (
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40" onClick={onCancel}>
+      <div
+        className="w-[28rem] max-w-[90vw] space-y-3 rounded-lg bg-white dark:bg-slate-800 p-5 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold dark:text-slate-200">{title}</h2>
+        {children ? <div className="text-sm text-slate-600 dark:text-slate-300">{children}</div> : null}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} disabled={busy}>
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

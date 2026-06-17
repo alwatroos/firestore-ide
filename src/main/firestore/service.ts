@@ -1,8 +1,29 @@
 import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
-import { AggregateField, FieldValue, Timestamp, type QueryDocumentSnapshot } from 'firebase-admin/firestore'
+import {
+  AggregateField,
+  FieldValue,
+  Timestamp,
+  type Firestore,
+  type Query,
+  type QueryDocumentSnapshot
+} from 'firebase-admin/firestore'
 import { getDb } from './clientManager'
-import { toPlainData } from './mapper'
+import { assertWritable } from './guard'
+import { fromPlainData, toPlainData } from './mapper'
 import { applyFiltersOnly, applySpec, clampLimit } from './queryBuilder'
+
+/**
+ * Validate that a path points at a document (even segment count), not a collection.
+ *
+ * @param path - Slash-delimited Firestore path.
+ * @throws If the path does not address a document.
+ */
+function assertDocumentPath(path: string): void {
+  const segments = path.split('/').filter(Boolean)
+  if (segments.length === 0 || segments.length % 2 !== 0) {
+    throw new Error(`Not a document path: ${path}`)
+  }
+}
 
 
 /**
@@ -16,6 +37,23 @@ function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
 }
 
 /**
+ * Resolve the base query for a spec: a single collection, or a collection group
+ * spanning every collection with the given id.
+ *
+ * @param db - Firestore instance.
+ * @param spec - The query spec (its `collectionGroup` flag selects the mode).
+ * @returns The base query to which filters/order/limit are applied.
+ * @throws If a collection group id is given as a multi-segment path.
+ */
+function baseQuery(db: Firestore, spec: QuerySpec): Query {
+  if (!spec.collectionGroup) return db.collection(spec.collectionPath)
+  if (spec.collectionPath.includes('/')) {
+    throw new Error('Collection group queries take a collection id, not a path')
+  }
+  return db.collectionGroup(spec.collectionPath)
+}
+
+/**
  * Run a COUNT aggregation and return a single synthetic document record.
  *
  * @param connectionId - Target connection.
@@ -24,7 +62,7 @@ function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
  */
 async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.count().get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: snap.data().count } }]
 }
@@ -39,7 +77,7 @@ async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<Doc
 async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   if (!spec.aggregateField) throw new Error('aggregateField is required for sum aggregation')
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.aggregate({ result: AggregateField.sum(spec.aggregateField) }).get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { sum: snap.data().result } }]
 }
@@ -54,7 +92,7 @@ async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<Docum
 async function runAvgQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   if (!spec.aggregateField) throw new Error('aggregateField is required for avg aggregation')
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.aggregate({ result: AggregateField.average(spec.aggregateField) }).get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { avg: snap.data().result } }]
 }
@@ -72,6 +110,8 @@ export async function runJsQuery(
   connectionId: string,
   code: string
 ): Promise<DocumentRecord[]> {
+  // JS snippets can perform writes, so block them entirely while read-only.
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
   // Intentional use of Function constructor — this is a user REPL in a local desktop app.
   // eslint-disable-next-line no-new-func
@@ -128,6 +168,24 @@ export async function listDocuments(
 }
 
 /**
+ * Fetch a single document by its full path.
+ *
+ * @param connectionId - Target connection.
+ * @param path - Full document path (even number of segments).
+ * @returns The document record, or `null` when it does not exist.
+ */
+export async function getDocument(
+  connectionId: string,
+  path: string
+): Promise<DocumentRecord | null> {
+  assertDocumentPath(path)
+  const db = await getDb(connectionId)
+  const snap = await db.doc(path).get()
+  if (!snap.exists) return null
+  return { id: snap.id, path: snap.ref.path, data: toPlainData(snap.data() ?? {}) }
+}
+
+/**
  * Execute a declarative query against a collection.
  * When `spec.aggregate === 'count'`, returns a single synthetic count record.
  *
@@ -143,7 +201,7 @@ export async function runQuery(
   if (spec.aggregate === 'sum') return runSumQuery(connectionId, spec)
   if (spec.aggregate === 'avg') return runAvgQuery(connectionId, spec)
   const db = await getDb(connectionId)
-  const snap = await applySpec(db.collection(spec.collectionPath), spec).get()
+  const snap = await applySpec(baseQuery(db, spec), spec).get()
   return snap.docs.map(toRecord)
 }
 
@@ -158,8 +216,9 @@ export async function saveDocument(
   connectionId: string,
   doc: DocumentRecord
 ): Promise<DocumentRecord> {
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
-  await db.doc(doc.path).set(doc.data)
+  await db.doc(doc.path).set(fromPlainData(doc.data, db))
   return doc
 }
 
@@ -171,6 +230,7 @@ export async function saveDocument(
  * @returns Resolves once deleted.
  */
 export async function deleteDocument(connectionId: string, path: string): Promise<void> {
+  await assertWritable(connectionId)
   const db = await getDb(connectionId)
   await db.doc(path).delete()
 }

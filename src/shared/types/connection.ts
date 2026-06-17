@@ -13,6 +13,19 @@ export interface ConnectionMeta {
   clientEmail: string
   /** ISO timestamp of creation. */
   createdAt: string
+  /** When true, all write operations against this connection are blocked. */
+  readOnly?: boolean
+}
+
+/**
+ * Mutable, secret-free fields of a connection that the renderer may update.
+ * Deliberately excludes credentials so secrets can never be injected via patch.
+ */
+export interface ConnectionPatch {
+  /** New display name. */
+  name?: string
+  /** New per-connection read-only flag. */
+  readOnly?: boolean
 }
 
 /**

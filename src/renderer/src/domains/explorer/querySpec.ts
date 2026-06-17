@@ -18,6 +18,7 @@ export function toQuerySpec(json: Record<string, unknown>): QuerySpec {
       : undefined
   return {
     collectionPath: json.collectionPath,
+    ...(json.collectionGroup === true ? { collectionGroup: true } : {}),
     filters: Array.isArray(json.filters) ? (json.filters as QueryFilter[]) : [],
     order: json.order != null ? (json.order as QueryOrder) : undefined,
     limit: typeof json.limit === 'number' ? json.limit : undefined,

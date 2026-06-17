@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type {
   ConnectionMeta,
+  ConnectionPatch,
   NewConnectionInput,
   StoredConnection
 } from '@shared/types/connection'
@@ -28,6 +29,30 @@ export async function addConnection(input: NewConnectionInput): Promise<Connecti
   const record = buildRecord(input.name, account, input.serviceAccountJson)
   await persistConnections([...(await loadConnections()), record])
   return toMeta(record)
+}
+
+/**
+ * Apply a secret-free patch (name, read-only flag) to a connection.
+ * Credentials are never touched, so secrets cannot be injected via patch.
+ *
+ * @param id - Connection id to update.
+ * @param patch - Fields to change.
+ * @returns The updated connection's secret-free metadata.
+ * @throws If no connection with the given id exists.
+ */
+export async function updateConnection(id: string, patch: ConnectionPatch): Promise<ConnectionMeta> {
+  const connections = await loadConnections()
+  const index = connections.findIndex((c) => c.id === id)
+  if (index === -1) throw new Error(`Connection not found: ${id}`)
+  const current = connections[index]
+  const updated: StoredConnection = {
+    ...current,
+    ...(patch.name !== undefined ? { name: patch.name } : {}),
+    ...(patch.readOnly !== undefined ? { readOnly: patch.readOnly } : {})
+  }
+  connections[index] = updated
+  await persistConnections(connections)
+  return toMeta(updated)
 }
 
 /**

@@ -1,16 +1,25 @@
-import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore'
+import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useState } from 'react'
-import { Button, Empty, ErrorBanner } from '../../components/ui'
+import { type ReactNode, useMemo, useState } from 'react'
+import { Button, Empty, ErrorBanner, WarningList } from '../../components/ui'
 import { api, unwrap } from '../../lib/api'
 import { parseJsonObject } from '../../lib/json'
 import { useAsync } from '../../lib/useAsync'
 import { activeConnectionAtom } from '../connections/atoms'
+import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
-import { queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
-import { collectColumns, formatCell } from './columns'
+import { useOpenDocument } from '../documents/hooks'
+import { useQueryHistory } from '../queries/hooks'
+import { queryDraftAtom, queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
+import { CellValue } from './CellValue'
+import { collectColumns } from './columns'
+import { estimateReads } from './cost'
 import { useQueryRunner } from './hooks'
+import { IndexHint } from './IndexHint'
+import { isMissingIndexError } from './indexes'
+import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
+import { useTransfer } from './useTransfer'
 
 const JSON_PLACEHOLDER = JSON.stringify(
   {
@@ -83,15 +92,16 @@ interface ResultRowProps {
   doc: DocumentRecord
   columns: string[]
   onSelect: (doc: DocumentRecord) => void
+  onOpenRef: (path: string) => void
 }
 
 /**
  * A single result row in the query results table.
  *
- * @param props - Document, columns and selection callback.
+ * @param props - Document, columns, selection and reference-follow callbacks.
  * @returns The rendered table row.
  */
-function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
+function ResultRow({ doc, columns, onSelect, onOpenRef }: ResultRowProps): ReactNode {
   return (
     <tr
       onClick={() => onSelect(doc)}
@@ -100,7 +110,7 @@ function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
       <td className="px-3 py-1.5 font-mono text-slate-500 dark:text-slate-400">{doc.id}</td>
       {columns.map((col) => (
         <td key={col} className="max-w-xs truncate px-3 py-1.5">
-          {formatCell(doc.data[col])}
+          <CellValue value={doc.data[col]} onOpenRef={onOpenRef} />
         </td>
       ))}
     </tr>
@@ -116,6 +126,9 @@ function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
 function QueryResultsTable(): ReactNode {
   const results = useAtomValue(queryResultsAtom)
   const setDocument = useSetAtom(selectedDocumentAtom)
+  const active = useAtomValue(activeConnectionAtom)
+  const { open: openRef } = useOpenDocument(active?.id ?? null)
+  const { exportRecords, busy: exportBusy } = useTransfer(active?.id ?? null)
 
   if (results.length === 0) return <Empty text="Run a query to see results" />
 
@@ -139,8 +152,16 @@ function QueryResultsTable(): ReactNode {
   const columns = collectColumns(results)
   return (
     <div className="overflow-auto">
-      <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
-        {results.length} result{results.length !== 1 ? 's' : ''}
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
+        <span>{results.length} result{results.length !== 1 ? 's' : ''} · ~{estimateReads(results)} reads</span>
+        <span className="flex gap-1">
+          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'json', 'query-results')}>
+            Export JSON
+          </Button>
+          <Button variant="ghost" disabled={exportBusy} onClick={() => void exportRecords(results, 'csv', 'query-results')}>
+            Export CSV
+          </Button>
+        </span>
       </div>
       <table className="w-full border-collapse text-left text-xs">
         <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -153,7 +174,13 @@ function QueryResultsTable(): ReactNode {
         </thead>
         <tbody>
           {results.map((doc) => (
-            <ResultRow key={doc.path} doc={doc} columns={columns} onSelect={setDocument} />
+            <ResultRow
+              key={doc.path}
+              doc={doc}
+              columns={columns}
+              onSelect={setDocument}
+              onOpenRef={(path) => void openRef(path)}
+            />
           ))}
         </tbody>
       </table>
@@ -172,19 +199,28 @@ function QueryResultsTable(): ReactNode {
  */
 async function executeJsonQuery(
   queryText: string,
+  collectionGroup: boolean,
   setCollection: (c: string) => void,
+  setLastSpec: (spec: QuerySpec | null) => void,
   runSpec: ReturnType<typeof useQueryRunner>['runSpec'],
   setParseError: (msg: string | null) => void
-): Promise<void> {
+): Promise<number | null> {
   setParseError(null)
   const parsed = parseJsonObject(queryText)
-  if (!parsed.ok) return setParseError(parsed.error)
+  if (!parsed.ok) {
+    setParseError(parsed.error)
+    return null
+  }
   try {
     const spec = toQuerySpec(parsed.value)
+    if (collectionGroup) spec.collectionGroup = true
+    setLastSpec(spec)
     setCollection(spec.collectionPath)
-    await runSpec(spec)
+    const docs = await runSpec(spec)
+    return docs?.length ?? 0
   } catch (e) {
     setParseError(e instanceof Error ? e.message : 'Invalid query spec')
+    return null
   }
 }
 
@@ -195,28 +231,52 @@ async function executeJsonQuery(
  */
 export function QueryEditor(): ReactNode {
   const active = useAtomValue(activeConnectionAtom)
+  const readOnly = useReadOnly()
   const setCollection = useSetAtom(selectedCollectionAtom)
   const setResults = useSetAtom(queryResultsAtom)
   const { runSpec, error: jsonError, busy: jsonBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
   const { error: jsError, busy: jsBusy, run: runJs } = useAsync()
+  const { record } = useQueryHistory()
   const [mode, setMode] = useAtom(queryModeAtom)
-  const [queryText, setQueryText] = useState('')
+  const [queryText, setQueryText] = useAtom(queryDraftAtom)
+  const [collectionGroup, setCollectionGroup] = useState(false)
+  const [lastSpec, setLastSpec] = useState<QuerySpec | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
 
   const busy = mode === 'json' ? jsonBusy : jsBusy
   const apiError = mode === 'json' ? jsonError : jsError
 
-  function handleRun() {
+  // Best-effort, non-blocking cost/efficiency hints for the JSON spec being typed.
+  const warnings = useMemo(() => {
+    if (mode !== 'json' || !queryText.trim()) return []
+    const parsed = parseJsonObject(queryText)
+    if (!parsed.ok) return []
+    try {
+      return queryWarnings(toQuerySpec(parsed.value))
+    } catch {
+      return []
+    }
+  }, [mode, queryText])
+
+  // JS snippets can write, so they are blocked while read-only.
+  const runDisabled = !queryText.trim() || !active || (mode === 'js' && readOnly)
+
+  async function handleRun(): Promise<void> {
     if (mode === 'json') {
-      void executeJsonQuery(queryText, setCollection, runSpec, setParseError)
+      const count = await executeJsonQuery(queryText, collectionGroup, setCollection, setLastSpec, runSpec, setParseError)
+      if (count !== null && active) {
+        void record({ connectionId: active.id, kind: 'json', query: queryText, resultCount: count })
+      }
       return
     }
     setParseError(null)
     if (!active) return setParseError('No active connection')
-    void runJs(async () => {
-      const results = await unwrap(api.runJsQuery(active.id, queryText))
-      setResults(results)
+    const results = await runJs(async () => {
+      const r = await unwrap(api.runJsQuery(active.id, queryText))
+      setResults(r)
+      return r
     })
+    void record({ connectionId: active.id, kind: 'js', query: queryText, resultCount: results?.length })
   }
 
   return (
@@ -224,9 +284,9 @@ export function QueryEditor(): ReactNode {
       <QueryToolbar
         mode={mode}
         onModeChange={(m) => { setMode(m); setParseError(null) }}
-        onRun={handleRun}
+        onRun={() => void handleRun()}
         busy={busy}
-        disabled={!queryText.trim() || !active}
+        disabled={runDisabled}
       />
       <textarea
         key={mode}
@@ -237,7 +297,24 @@ export function QueryEditor(): ReactNode {
         value={queryText}
         onChange={(e) => setQueryText(e.target.value)}
       />
+      {mode === 'json' && (
+        <label className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 px-4 py-1.5 text-xs text-slate-600 dark:text-slate-400">
+          <input
+            type="checkbox"
+            checked={collectionGroup}
+            onChange={(e) => setCollectionGroup(e.target.checked)}
+          />
+          Collection group query (use the bare collection id, searches all parents)
+        </label>
+      )}
+      {mode === 'js' && readOnly && (
+        <WarningList messages={['Read-only mode is on — JS queries are blocked because they can write.']} />
+      )}
+      <WarningList messages={warnings} />
       <ErrorBanner message={parseError ?? apiError} />
+      {mode === 'json' && lastSpec && jsonError && isMissingIndexError(jsonError) && (
+        <IndexHint spec={lastSpec} message={jsonError} />
+      )}
       <div className="min-h-0 flex-1 overflow-auto">
         <QueryResultsTable />
       </div>

@@ -20,6 +20,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode 
   const [host, setHost] = useState(settings.ollamaHost)
   const [sampleSize, setSampleSize] = useState(settings.schemaSampleSize)
   const [theme, setTheme] = useState<Theme>(settings.theme)
+  const [readOnly, setReadOnly] = useState(settings.readOnly)
 
   /**
    * Persist the edited settings then close the dialog.
@@ -27,7 +28,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode 
    * @returns Resolves once saved.
    */
   async function onSave(): Promise<void> {
-    await save({ ...settings, ollamaHost: host, schemaSampleSize: sampleSize, theme })
+    await save({ ...settings, ollamaHost: host, schemaSampleSize: sampleSize, theme, readOnly })
     onClose()
   }
 
@@ -72,6 +73,19 @@ export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode 
             ))}
           </div>
         </div>
+        <label className="flex items-center gap-2 text-sm dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={readOnly}
+            onChange={(event) => setReadOnly(event.target.checked)}
+          />
+          <span>
+            Global read-only mode
+            <span className="block text-xs text-slate-400 dark:text-slate-500">
+              Blocks all writes (save, delete, JS queries) across every connection.
+            </span>
+          </span>
+        </label>
         <ErrorBanner message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

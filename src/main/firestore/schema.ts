@@ -1,4 +1,5 @@
 import type { CollectionSchema, DatabaseSchema, FieldSchema } from '@shared/types/schema'
+import { markerKind } from '@shared/utils/markers'
 import { requireConnection } from '../connections/store'
 import { listCollections, listDocuments } from './service'
 
@@ -6,12 +7,13 @@ import { listCollections, listDocuments } from './service'
  * Classify a plain value into a coarse schema type label.
  *
  * @param value - The value to classify.
- * @returns A type label such as `string`, `array`, `null` or `reference`.
+ * @returns A type label such as `string`, `array`, `timestamp` or `reference`.
  */
 export function valueType(value: unknown): string {
   if (value === null) return 'null'
   if (Array.isArray(value)) return 'array'
-  if (value && typeof value === 'object' && '_ref' in value) return 'reference'
+  const kind = markerKind(value)
+  if (kind) return kind
   return typeof value
 }
 

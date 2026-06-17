@@ -8,6 +8,7 @@ import { selectedDocumentAtom } from './domains/documents/atoms'
 import { DocumentEditor } from './domains/documents/DocumentEditor'
 import { documentsVersionAtom } from './domains/explorer/atoms'
 import { ExplorerPane } from './domains/explorer/ExplorerPane'
+import { RulesDialog } from './domains/rules/RulesDialog'
 import { settingsAtom } from './domains/settings/atoms'
 import { SettingsDialog } from './domains/settings/SettingsDialog'
 
@@ -59,6 +60,7 @@ export function App(): ReactNode {
   const active = useAtomValue(activeConnectionAtom)
   const bumpVersion = useSetAtom(documentsVersionAtom)
   const [showSettings, setShowSettings] = useState(false)
+  const [showRules, setShowRules] = useState(false)
   const onSaved = useCallback(() => bumpVersion((v) => v + 1), [bumpVersion])
   const settings = useAtomValue(settingsAtom)
 
@@ -82,7 +84,7 @@ export function App(): ReactNode {
 
   return (
     <div className="flex h-screen text-slate-800 dark:bg-slate-950 dark:text-slate-200">
-      <Sidebar onOpenSettings={() => setShowSettings(true)} />
+      <Sidebar onOpenSettings={() => setShowSettings(true)} onOpenRules={() => setShowRules(true)} />
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <MainContent
           connectionId={active?.id ?? null}
@@ -91,6 +93,7 @@ export function App(): ReactNode {
         />
       </main>
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
+      {showRules && <RulesDialog connectionId={active?.id ?? null} onClose={() => setShowRules(false)} />}
     </div>
   )
 }

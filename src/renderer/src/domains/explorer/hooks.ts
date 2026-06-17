@@ -1,12 +1,23 @@
 import type { DocumentRecord, QuerySpec } from '@shared/types/firestore'
-import { type PrimitiveAtom, useAtom, useAtomValue } from 'jotai'
+import { type PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useEffect, useState } from 'react'
 import { api, unwrap } from '../../lib/api'
 import { useAsync } from '../../lib/useAsync'
-import { collectionsAtom, documentsAtom, documentsVersionAtom } from './atoms'
+import { collectionsAtom, documentsAtom, documentsVersionAtom, sessionCostAtom } from './atoms'
+import { addCost, type CostTotals, estimateReads } from './cost'
 
 /** Number of documents fetched per page in the Browse tab. */
 const PAGE_SIZE = 50
+
+/**
+ * Expose a callback that adds estimated operations to the session cost tally.
+ *
+ * @returns A function accepting a partial {@link CostTotals} delta.
+ */
+export function useCostTracker(): (delta: Partial<CostTotals>) => void {
+  const setCost = useSetAtom(sessionCostAtom)
+  return useCallback((delta: Partial<CostTotals>) => setCost((prev) => addCost(prev, delta)), [setCost])
+}
 
 /**
  * Load collection ids for a connection, refreshing when it changes.
@@ -41,6 +52,7 @@ export function useDocuments(connectionId: string | null, collectionPath: string
   const version = useAtomValue(documentsVersionAtom)
   const { error, busy, run } = useAsync()
   const [hasMore, setHasMore] = useState(true)
+  const trackCost = useCostTracker()
 
   // `version` is intentionally captured so that when mutations bump it, this
   // callback gets a new identity, which re-triggers the effect below.
@@ -51,8 +63,9 @@ export function useDocuments(connectionId: string | null, collectionPath: string
       const docs = await unwrap(api.listDocuments(connectionId, collectionPath, PAGE_SIZE))
       setDocuments(docs)
       setHasMore(docs.length >= PAGE_SIZE)
+      trackCost({ reads: Math.max(1, docs.length) })
     })
-  }, [connectionId, collectionPath, run, setDocuments, version])
+  }, [connectionId, collectionPath, run, setDocuments, version, trackCost])
 
   const loadMore = useCallback(() => {
     if (!connectionId || !collectionPath) return undefined
@@ -62,8 +75,9 @@ export function useDocuments(connectionId: string | null, collectionPath: string
       )
       setDocuments((prev) => [...prev, ...next])
       setHasMore(next.length >= PAGE_SIZE)
+      trackCost({ reads: Math.max(1, next.length) })
     })
-  }, [connectionId, collectionPath, documents.length, run, setDocuments])
+  }, [connectionId, collectionPath, documents.length, run, setDocuments, trackCost])
 
   useEffect(() => {
     setDocuments([])
@@ -87,16 +101,18 @@ export function useQueryRunner(
 ) {
   const setDocuments = useAtom(target)[1]
   const { error, busy, run } = useAsync()
+  const trackCost = useCostTracker()
   const runSpec = useCallback(
     (spec: QuerySpec): Promise<DocumentRecord[] | undefined> => {
       if (!connectionId) return Promise.resolve(undefined)
       return run(async () => {
         const docs = await unwrap(api.runQuery(connectionId, spec))
         setDocuments(docs)
+        trackCost({ reads: estimateReads(docs) })
         return docs
       })
     },
-    [connectionId, run, setDocuments]
+    [connectionId, run, setDocuments, trackCost]
   )
   return { runSpec, error, busy }
 }
