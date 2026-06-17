@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { AddConnectionForm } from '../domains/connections/AddConnectionForm'
 import { ConnectionList } from '../domains/connections/ConnectionList'
-import { CollectionList } from '../domains/explorer/CollectionList'
+import { CollectionTree } from '../domains/explorer/CollectionTree'
 import { Button } from './ui'
 
 /**
@@ -41,8 +41,8 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }): Rea
           <ConnectionList />
         </Section>
         <AddConnectionForm />
-        <Section title="Collections">
-          <CollectionList />
+        <Section title="Data">
+          <CollectionTree />
         </Section>
       </div>
     </aside>

@@ -1,5 +1,12 @@
 import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
-import { AggregateField, FieldValue, Timestamp, type QueryDocumentSnapshot } from 'firebase-admin/firestore'
+import {
+  AggregateField,
+  FieldValue,
+  Timestamp,
+  type Firestore,
+  type Query,
+  type QueryDocumentSnapshot
+} from 'firebase-admin/firestore'
 import { getDb } from './clientManager'
 import { assertWritable } from './guard'
 import { fromPlainData, toPlainData } from './mapper'
@@ -30,6 +37,23 @@ function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
 }
 
 /**
+ * Resolve the base query for a spec: a single collection, or a collection group
+ * spanning every collection with the given id.
+ *
+ * @param db - Firestore instance.
+ * @param spec - The query spec (its `collectionGroup` flag selects the mode).
+ * @returns The base query to which filters/order/limit are applied.
+ * @throws If a collection group id is given as a multi-segment path.
+ */
+function baseQuery(db: Firestore, spec: QuerySpec): Query {
+  if (!spec.collectionGroup) return db.collection(spec.collectionPath)
+  if (spec.collectionPath.includes('/')) {
+    throw new Error('Collection group queries take a collection id, not a path')
+  }
+  return db.collectionGroup(spec.collectionPath)
+}
+
+/**
  * Run a COUNT aggregation and return a single synthetic document record.
  *
  * @param connectionId - Target connection.
@@ -38,7 +62,7 @@ function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
  */
 async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.count().get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: snap.data().count } }]
 }
@@ -53,7 +77,7 @@ async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<Doc
 async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   if (!spec.aggregateField) throw new Error('aggregateField is required for sum aggregation')
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.aggregate({ result: AggregateField.sum(spec.aggregateField) }).get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { sum: snap.data().result } }]
 }
@@ -68,7 +92,7 @@ async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<Docum
 async function runAvgQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
   if (!spec.aggregateField) throw new Error('aggregateField is required for avg aggregation')
   const db = await getDb(connectionId)
-  const base = applyFiltersOnly(db.collection(spec.collectionPath), spec)
+  const base = applyFiltersOnly(baseQuery(db, spec), spec)
   const snap = await base.aggregate({ result: AggregateField.average(spec.aggregateField) }).get()
   return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { avg: snap.data().result } }]
 }
@@ -177,7 +201,7 @@ export async function runQuery(
   if (spec.aggregate === 'sum') return runSumQuery(connectionId, spec)
   if (spec.aggregate === 'avg') return runAvgQuery(connectionId, spec)
   const db = await getDb(connectionId)
-  const snap = await applySpec(db.collection(spec.collectionPath), spec).get()
+  const snap = await applySpec(baseQuery(db, spec), spec).get()
   return snap.docs.map(toRecord)
 }
 

@@ -5,8 +5,10 @@ import { Button, Empty, ErrorBanner } from '../../components/ui'
 import { activeConnectionAtom } from '../connections/atoms'
 import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
+import { useOpenDocument } from '../documents/hooks'
 import { selectedCollectionAtom } from './atoms'
-import { collectColumns, formatCell } from './columns'
+import { CellValue } from './CellValue'
+import { collectColumns } from './columns'
 import { useDocuments } from './hooks'
 
 /** Approximate height of each data row in pixels (matches py-1.5 + text-xs). */
@@ -107,21 +109,22 @@ interface DocRowProps {
   doc: DocumentRecord
   columns: string[]
   onClick: () => void
+  onOpenRef: (path: string) => void
 }
 
 /**
  * A single document row in the table.
  *
- * @param props - Document data, column keys and click handler.
+ * @param props - Document data, column keys, click and reference-follow handlers.
  * @returns The rendered table row.
  */
-function DocRow({ doc, columns, onClick }: DocRowProps): ReactNode {
+function DocRow({ doc, columns, onClick, onOpenRef }: DocRowProps): ReactNode {
   return (
     <tr onClick={onClick} className="cursor-pointer border-b border-slate-100 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/30">
       <td className="px-3 py-1.5 font-mono text-slate-500 dark:text-slate-400">{doc.id}</td>
       {columns.map((col) => (
         <td key={col} className="max-w-xs truncate px-3 py-1.5">
-          {formatCell(doc.data[col])}
+          <CellValue value={doc.data[col]} onOpenRef={onOpenRef} />
         </td>
       ))}
     </tr>
@@ -141,13 +144,15 @@ function VirtualBody({
   columns,
   scrollTop,
   containerHeight,
-  onSelect
+  onSelect,
+  onOpenRef
 }: {
   documents: DocumentRecord[]
   columns: string[]
   scrollTop: number
   containerHeight: number
   onSelect: (doc: DocumentRecord) => void
+  onOpenRef: (path: string) => void
 }): ReactNode {
   const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
   const end = Math.min(
@@ -171,6 +176,7 @@ function VirtualBody({
           doc={doc}
           columns={columns}
           onClick={() => onSelect(doc)}
+          onOpenRef={onOpenRef}
         />
       ))}
       {paddingBottom > 0 && (
@@ -199,6 +205,7 @@ export function DocumentTable(): ReactNode {
   )
   const setDocument = useSetAtom(selectedDocumentAtom)
   const readOnly = useReadOnly()
+  const { open: openRef } = useOpenDocument(active?.id ?? null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -298,6 +305,7 @@ export function DocumentTable(): ReactNode {
             scrollTop={scrollTop}
             containerHeight={containerHeight}
             onSelect={setDocument}
+            onOpenRef={(path) => void openRef(path)}
           />
         </table>
         {documents.length === 0 && !busy && <Empty text="No documents" />}

@@ -36,6 +36,11 @@ describe('toQuerySpec', () => {
     expect(spec.limit).toBeUndefined()
   })
 
+  it('carries the collectionGroup flag only when explicitly true', () => {
+    expect(toQuerySpec({ collectionPath: 'orders', collectionGroup: true }).collectionGroup).toBe(true)
+    expect(toQuerySpec({ collectionPath: 'orders' }).collectionGroup).toBeUndefined()
+  })
+
   it('throws when collectionPath is absent', () => {
     expect(() => toQuerySpec({})).toThrow('collectionPath (string) is required')
   })

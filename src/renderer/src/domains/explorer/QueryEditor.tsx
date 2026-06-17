@@ -8,8 +8,10 @@ import { useAsync } from '../../lib/useAsync'
 import { activeConnectionAtom } from '../connections/atoms'
 import { useReadOnly } from '../connections/hooks'
 import { selectedDocumentAtom } from '../documents/atoms'
+import { useOpenDocument } from '../documents/hooks'
 import { queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
-import { collectColumns, formatCell } from './columns'
+import { CellValue } from './CellValue'
+import { collectColumns } from './columns'
 import { useQueryRunner } from './hooks'
 import { queryWarnings } from './queryWarnings'
 import { toQuerySpec } from './querySpec'
@@ -85,15 +87,16 @@ interface ResultRowProps {
   doc: DocumentRecord
   columns: string[]
   onSelect: (doc: DocumentRecord) => void
+  onOpenRef: (path: string) => void
 }
 
 /**
  * A single result row in the query results table.
  *
- * @param props - Document, columns and selection callback.
+ * @param props - Document, columns, selection and reference-follow callbacks.
  * @returns The rendered table row.
  */
-function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
+function ResultRow({ doc, columns, onSelect, onOpenRef }: ResultRowProps): ReactNode {
   return (
     <tr
       onClick={() => onSelect(doc)}
@@ -102,7 +105,7 @@ function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
       <td className="px-3 py-1.5 font-mono text-slate-500 dark:text-slate-400">{doc.id}</td>
       {columns.map((col) => (
         <td key={col} className="max-w-xs truncate px-3 py-1.5">
-          {formatCell(doc.data[col])}
+          <CellValue value={doc.data[col]} onOpenRef={onOpenRef} />
         </td>
       ))}
     </tr>
@@ -118,6 +121,8 @@ function ResultRow({ doc, columns, onSelect }: ResultRowProps): ReactNode {
 function QueryResultsTable(): ReactNode {
   const results = useAtomValue(queryResultsAtom)
   const setDocument = useSetAtom(selectedDocumentAtom)
+  const active = useAtomValue(activeConnectionAtom)
+  const { open: openRef } = useOpenDocument(active?.id ?? null)
 
   if (results.length === 0) return <Empty text="Run a query to see results" />
 
@@ -155,7 +160,13 @@ function QueryResultsTable(): ReactNode {
         </thead>
         <tbody>
           {results.map((doc) => (
-            <ResultRow key={doc.path} doc={doc} columns={columns} onSelect={setDocument} />
+            <ResultRow
+              key={doc.path}
+              doc={doc}
+              columns={columns}
+              onSelect={setDocument}
+              onOpenRef={(path) => void openRef(path)}
+            />
           ))}
         </tbody>
       </table>
@@ -174,6 +185,7 @@ function QueryResultsTable(): ReactNode {
  */
 async function executeJsonQuery(
   queryText: string,
+  collectionGroup: boolean,
   setCollection: (c: string) => void,
   runSpec: ReturnType<typeof useQueryRunner>['runSpec'],
   setParseError: (msg: string | null) => void
@@ -183,6 +195,7 @@ async function executeJsonQuery(
   if (!parsed.ok) return setParseError(parsed.error)
   try {
     const spec = toQuerySpec(parsed.value)
+    if (collectionGroup) spec.collectionGroup = true
     setCollection(spec.collectionPath)
     await runSpec(spec)
   } catch (e) {
@@ -204,6 +217,7 @@ export function QueryEditor(): ReactNode {
   const { error: jsError, busy: jsBusy, run: runJs } = useAsync()
   const [mode, setMode] = useAtom(queryModeAtom)
   const [queryText, setQueryText] = useState('')
+  const [collectionGroup, setCollectionGroup] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
 
   const busy = mode === 'json' ? jsonBusy : jsBusy
@@ -226,7 +240,7 @@ export function QueryEditor(): ReactNode {
 
   function handleRun() {
     if (mode === 'json') {
-      void executeJsonQuery(queryText, setCollection, runSpec, setParseError)
+      void executeJsonQuery(queryText, collectionGroup, setCollection, runSpec, setParseError)
       return
     }
     setParseError(null)
@@ -255,6 +269,16 @@ export function QueryEditor(): ReactNode {
         value={queryText}
         onChange={(e) => setQueryText(e.target.value)}
       />
+      {mode === 'json' && (
+        <label className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 px-4 py-1.5 text-xs text-slate-600 dark:text-slate-400">
+          <input
+            type="checkbox"
+            checked={collectionGroup}
+            onChange={(e) => setCollectionGroup(e.target.checked)}
+          />
+          Collection group query (use the bare collection id, searches all parents)
+        </label>
+      )}
       {mode === 'js' && readOnly && (
         <WarningList messages={['Read-only mode is on — JS queries are blocked because they can write.']} />
       )}

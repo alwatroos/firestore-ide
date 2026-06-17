@@ -33,8 +33,16 @@ export type QueryAggregate = 'count' | 'sum' | 'avg'
 
 /** Declarative query specification evaluated in the main process. */
 export interface QuerySpec {
-  /** Collection (or sub-collection) path to query. */
+  /**
+   * Collection (or sub-collection) path to query. When `collectionGroup` is set,
+   * this must instead be a bare collection id (the leaf segment), not a path.
+   */
   collectionPath: string
+  /**
+   * When true, query every collection with this id across all parents
+   * (Firestore collection group query) instead of a single collection path.
+   */
+  collectionGroup?: boolean
   /** Zero or more `where` filters. */
   filters?: QueryFilter[]
   /** Optional ordering clause (ignored for aggregations). */

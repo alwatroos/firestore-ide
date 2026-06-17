@@ -19,6 +19,7 @@ export function parseQuerySpec(raw: string): QuerySpec {
       : undefined
   return {
     collectionPath: parsed.collectionPath,
+    ...(parsed.collectionGroup === true ? { collectionGroup: true } : {}),
     filters: Array.isArray(parsed.filters) ? parsed.filters : [],
     order: parsed.order ?? undefined,
     limit: typeof parsed.limit === 'number' ? parsed.limit : undefined,
