@@ -1,6 +1,6 @@
 {
   "name": "firestore-ide",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Desktop IDE for Google Cloud Firestore with AI-powered query generation.",
   "author": {
     "name": "Karol Płoski",
