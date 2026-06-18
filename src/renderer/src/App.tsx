@@ -8,6 +8,7 @@ import { selectedDocumentAtom } from './domains/documents/atoms'
 import { DocumentEditor } from './domains/documents/DocumentEditor'
 import { documentsVersionAtom } from './domains/explorer/atoms'
 import { ExplorerPane } from './domains/explorer/ExplorerPane'
+import { QueryTabBar } from './domains/explorer/QueryTabBar'
 import { RulesDialog } from './domains/rules/RulesDialog'
 import { settingsAtom } from './domains/settings/atoms'
 import { SettingsDialog } from './domains/settings/SettingsDialog'
@@ -36,6 +37,7 @@ function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps
   if (!selectedDocument) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
+        <QueryTabBar />
         <ExplorerPane />
         <AiQueryPanel onOpenSettings={onOpenSettings} />
       </div>
@@ -44,6 +46,7 @@ function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <QueryTabBar />
       <ResizableSplit left={<ExplorerPane />} right={editor} />
       <AiQueryPanel onOpenSettings={onOpenSettings} />
     </div>
