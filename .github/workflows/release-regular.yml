@@ -6,8 +6,9 @@ name: Release – Regular (minor bump)
 #
 # Requirements:
 # - A `develop` branch must exist.
-# - The GitHub Actions bot must be able to push directly to `main` and `develop`
-#   (disable push-protection rules for those branches, or supply a PAT via secrets.BOT_TOKEN).
+# - secrets.RELEASE_PAT must be set to a Personal Access Token (classic, repo scope)
+#   from an account with Maintain or Admin access. The develop branch ruleset requires
+#   this to bypass the "Changes must be made through a pull request" rule for back-merges.
 
 on:
   workflow_dispatch:
@@ -32,7 +33,7 @@ jobs:
         with:
           ref: develop
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT || github.token }}
 
       - name: Configure git
         run: |
