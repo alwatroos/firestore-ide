@@ -118,21 +118,65 @@ testing pure functions. Run `pnpm test` (and `pnpm typecheck`) before committing
 
 ## Releases (CI/CD)
 
-`.github/workflows/release.yml` runs on every push to `main`:
+Releases are **manual only** — triggered by a human from the GitHub Actions UI.
+There are two paths, both of which end with a tag, a GitHub Release, and built
+installers (`.AppImage` / `.exe` / `.dmg`) attached to the release.
 
-1. **Version** job bumps `package.json` (`npm version`), commits it back as
-   `chore(release): vX.Y.Z [skip ci]`, pushes a matching `vX.Y.Z` tag, and
-   creates a GitHub Release with generated notes. Bump level defaults to
-   `patch`; put `#minor` or `#major` in the merge commit message to override.
-2. **Build** job (matrix: ubuntu/windows/macos) checks out the new tag, runs
-   `pnpm dist` (electron-builder), and attaches the installers
-   (`.AppImage`, `.exe`, `.dmg`) to the release for direct download.
+### Branch model
 
-Notes:
-- The bump commit carries `[skip ci]` so it does not re-trigger the workflow.
+```
+develop  ──────────────────────────────────────────────►
+              │                                 ▲
+              └─ RELEASE/X.Y.0 ──► main ────────┘  (back-merge)
+main     ──────────────────────────────────────────────►
+              ▲                        │ ▲
+              │  HOTFIX/X.Y.Z ─────────┘ │
+              └───────────────────────────┘  (back-merge to develop)
+```
+
+### Regular release (`release-regular.yml`) — minor bump
+
+Trigger: **Actions → "Release – Regular (minor bump)" → Run workflow**
+
+1. Checks out `develop`.
+2. Bumps the **minor** version (`X.Y.Z → X.(Y+1).0`) in `package.json`.
+3. Creates `RELEASE/X.(Y+1).0` from `develop`, commits the bump, pushes.
+4. Merges `RELEASE/…` into `main` using a merge commit (no squash/rebase).
+5. Tags `vX.(Y+1).0` on `main` and pushes the tag.
+6. Back-merges `main` into `develop` so the version bump propagates.
+7. Deletes the `RELEASE/…` branch.
+8. Creates a GitHub Release with auto-generated notes.
+9. **Build** job (matrix: ubuntu / windows / macos) runs `pnpm dist` and
+   attaches installers to the release.
+
+### Fix release (`release-fix.yml` + `release-hotfix-merge.yml`) — patch bump
+
+**Step 1 — create the hotfix branch:**
+Trigger: **Actions → "Release – Fix (patch bump) – Create Hotfix" → Run workflow**
+
+1. Bumps the **patch** version (`X.Y.Z → X.Y.(Z+1)`) in `package.json` on `main`.
+2. Creates `HOTFIX/X.Y.(Z+1)` from `main`, commits the bump, pushes.
+3. Opens a PR `HOTFIX/… → main` automatically.
+
+**Step 2 — apply the fix and release:**
+
+4. Developer pushes fix commits onto the `HOTFIX/…` branch.
+5. Developer clicks **"Merge pull request"** on GitHub.
+6. `release-hotfix-merge.yml` fires automatically:
+   - Tags `vX.Y.(Z+1)` on `main`.
+   - Back-merges `main` into `develop`.
+   - Deletes the `HOTFIX/…` branch.
+   - Creates a GitHub Release with auto-generated notes.
+   - **Build** job builds and attaches installers.
+
+### Notes
+
 - Builds are **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`); add signing
   secrets and config when distribution requires it.
 - electron-builder runs with `publish: null`; release assets are uploaded by the
   workflow (`softprops/action-gh-release`), not by electron-builder.
-- The bot pushes to `main` using `GITHUB_TOKEN`; if `main` is a protected branch
-  it must allow GitHub Actions to push (or supply a PAT).
+- The bot pushes directly to `main` and `develop` via `GITHUB_TOKEN`. If those
+  branches have push-protection rules, either disable them for the Actions bot or
+  replace `secrets.GITHUB_TOKEN` with a PAT stored in `secrets.BOT_TOKEN`.
+- Back-merge steps will fail if `main` and `develop` have diverged with conflicts;
+  resolve manually and re-run the failed job.

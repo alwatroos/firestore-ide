@@ -34,5 +34,6 @@
       "semicolons": "asNeeded"
     }
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "files": { "ignoreUnknown": true }
 }

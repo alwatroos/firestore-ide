@@ -1,0 +1,66 @@
+name: Release – Fix (patch bump) – Create Hotfix
+
+# Manual trigger only. Reads the current version from main, bumps the patch number,
+# creates a HOTFIX/{version} branch from main (with the version bump already committed),
+# and opens a PR against main.
+#
+# Developer workflow:
+# 1. Run this workflow → HOTFIX branch + PR are created automatically.
+# 2. Push fix commits onto the HOTFIX branch.
+# 3. Click "Merge pull request" on GitHub → the release-hotfix-merge workflow fires
+#    (tag → GitHub Release → build installers → back-merge to develop).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-hotfix:
+    name: Create HOTFIX branch and open PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          new=$(npm version patch --no-git-tag-version)
+          echo "tag=${new}" >> "$GITHUB_OUTPUT"
+          echo "version=${new#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create HOTFIX branch and push version bump
+        run: |
+          git checkout -b "HOTFIX/${{ steps.bump.outputs.version }}"
+          git add package.json
+          git commit -m "chore(release): ${{ steps.bump.outputs.tag }}"
+          git push origin "HOTFIX/${{ steps.bump.outputs.version }}"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "chore(release): ${{ steps.bump.outputs.tag }}" \
+            --body "## Hotfix ${{ steps.bump.outputs.tag }}
+
+          Apply your fix commits on this branch, then **merge this PR** to automatically trigger the release pipeline:
+          tag → GitHub Release → build installers → back-merge to \`develop\`." \
+            --base main \
+            --head "HOTFIX/${{ steps.bump.outputs.version }}"
