@@ -1,13 +1,25 @@
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, ErrorBanner, WarningList } from '../../components/ui'
+import { api } from '../../lib/api'
 import { activeConnectionAtom } from '../connections/atoms'
-import { activeTabAtom, queryResultsAtom, selectedCollectionAtom } from '../explorer/atoms'
+import {
+  activeQueryTabIdAtom,
+  activeTabAtom,
+  aiBusyAtom,
+  aiDraftAtom,
+  aiErrorAtom,
+  aiInstructionAtom,
+  aiStreamTextAtom,
+  queryResultsAtom,
+  queryTabsAtom,
+  selectedCollectionAtom,
+} from '../explorer/atoms'
 import { useQueryRunner } from '../explorer/hooks'
 import { queryWarnings } from '../explorer/queryWarnings'
 import { useQueryHistory } from '../queries/hooks'
 import { useSettings } from '../settings/hooks'
-import { useGenerateStream, useModels } from './hooks'
+import { useModels } from './hooks'
 import { parseQuerySpec } from './parse'
 
 /** Props for {@link AiQueryPanel}. */
@@ -110,43 +122,99 @@ async function applySpec(
 }
 
 /**
+ * Patch a specific tab's AI state directly in the store.
+ * Used inside generation callbacks so updates target the tab that triggered them,
+ * not the tab that happens to be active when the callback fires (enables concurrency).
+ */
+function patchTab(
+  store: ReturnType<typeof useStore>,
+  tabId: string,
+  patch: Partial<{
+    aiStreamText: string
+    aiDraft: string
+    aiBusy: boolean
+    aiError: string | null
+  }>
+) {
+  store.set(queryTabsAtom, (tabs) => tabs.map((t) => (t.id === tabId ? { ...t, ...patch } : t)))
+}
+
+/**
+ * Append a streaming chunk to a specific tab's AI log.
+ * Separate from patchTab to allow incremental appends without a full patch object.
+ */
+function appendChunk(store: ReturnType<typeof useStore>, tabId: string, chunk: string) {
+  store.set(queryTabsAtom, (tabs) =>
+    tabs.map((t) => (t.id === tabId ? { ...t, aiStreamText: t.aiStreamText + chunk } : t))
+  )
+}
+
+/**
  * Natural-language query assistant: streams a Firestore query via Ollama,
  * showing the generation token-by-token, then executes it and shows results.
+ * Each query tab has independent AI state; multiple tabs can generate concurrently.
  *
  * @param props - Settings opener callback.
  * @returns The rendered assistant panel.
  */
 export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
+  const store = useStore()
   const active = useAtomValue(activeConnectionAtom)
+  const activeTabId = useAtomValue(activeQueryTabIdAtom)
   const { settings } = useSettings()
   const { models, selected, setSelected, error: modelError } = useModels(settings.ollamaHost)
-  const [instruction, setInstruction] = useState('')
+
+  // Per-tab AI state
+  const [instruction, setInstruction] = useAtom(aiInstructionAtom)
+  const streamText = useAtomValue(aiStreamTextAtom)
+  const [draft, setDraft] = useAtom(aiDraftAtom)
+  const busy = useAtomValue(aiBusyAtom)
+  const aiError = useAtomValue(aiErrorAtom)
+
+  // Transient UI state (local — resets on tab switch intentionally)
   const [localError, setLocalError] = useState<string | null>(null)
-  const [streamText, setStreamText] = useState('')
-  const [draft, setDraft] = useState('')
-  const { generate, error, busy } = useGenerateStream()
+
   const { runSpec, busy: runBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
   const { record } = useQueryHistory()
   const setCollection = useSetAtom(selectedCollectionAtom)
   const setTab = useSetAtom(activeTabAtom)
 
   /**
-   * Stream a query from the current instruction into an editable draft. The
-   * query is shown for review and is NOT executed automatically (transparency).
+   * Stream a query for the current instruction.
+   * The tab id is captured at call time so the streaming callbacks update the
+   * correct tab even if the user switches away mid-generation.
    *
-   * @returns Resolves once generation completes.
+   * @returns Resolves once generation completes or fails.
    */
   async function onGenerate(): Promise<void> {
     setLocalError(null)
-    setStreamText('')
-    setDraft('')
     if (!active) return setLocalError('Select a connection first')
-    const result = await generate(
-      { connectionId: active.id, model: selected, instruction },
-      (chunk) => setStreamText((prev) => prev + chunk)
-    )
-    if (!result) return
-    setDraft(prettyJson(result.raw))
+
+    const tabId = activeTabId
+    patchTab(store, tabId, { aiStreamText: '', aiDraft: '', aiBusy: true, aiError: null })
+
+    try {
+      const result = await new Promise<{ raw: string }>((resolve, reject) => {
+        const cleanup = api.generateQueryStream(
+          { connectionId: active.id, model: selected, instruction },
+          (chunk) => appendChunk(store, tabId, chunk),
+          (res) => {
+            cleanup()
+            resolve(res)
+          },
+          (errMsg) => {
+            cleanup()
+            reject(new Error(errMsg))
+          }
+        )
+      })
+      patchTab(store, tabId, { aiBusy: false, aiDraft: prettyJson(result.raw) })
+    } catch (err) {
+      patchTab(store, tabId, {
+        aiBusy: false,
+        aiError: err instanceof Error ? err.message : 'Generation failed',
+      })
+    }
   }
 
   /**
@@ -242,7 +310,7 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
         </div>
       )}
 
-      <ErrorBanner message={localError ?? error ?? (noModels ? null : modelError)} />
+      <ErrorBanner message={localError ?? aiError ?? (noModels ? null : modelError)} />
     </div>
   )
 }

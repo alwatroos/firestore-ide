@@ -1,4 +1,4 @@
-import { IPC } from '@shared/ipc/channels'
+import { IPC, streamChannels } from '@shared/ipc/channels'
 import type { GenerateQueryInput } from '@shared/types/ollama'
 import { ok, toMessage } from '@shared/utils/result'
 import { ipcMain } from 'electron'
@@ -17,16 +17,18 @@ export function registerOllamaIpc(): void {
     ok(await generateQuery(input))
   )
 
-  ipcMain.on(IPC.ollamaGenerateQueryStream, async (event, input: GenerateQueryInput) => {
-    try {
-      const result = await generateQueryStream(input, (chunk) => {
-        if (!event.sender.isDestroyed()) event.sender.send(IPC.ollamaStreamChunk, chunk)
-      })
-      if (!event.sender.isDestroyed()) event.sender.send(IPC.ollamaStreamDone, result)
-    } catch (error) {
-      if (!event.sender.isDestroyed()) {
-        event.sender.send(IPC.ollamaStreamError, toMessage(error))
+  ipcMain.on(
+    IPC.ollamaGenerateQueryStream,
+    async (event, input: GenerateQueryInput, streamId: string) => {
+      const ch = streamChannels(streamId)
+      try {
+        const result = await generateQueryStream(input, (chunk) => {
+          if (!event.sender.isDestroyed()) event.sender.send(ch.chunk, chunk)
+        })
+        if (!event.sender.isDestroyed()) event.sender.send(ch.done, result)
+      } catch (error) {
+        if (!event.sender.isDestroyed()) event.sender.send(ch.error, toMessage(error))
       }
     }
-  })
+  )
 }

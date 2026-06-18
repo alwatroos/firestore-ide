@@ -27,7 +27,8 @@
     "format": "biome format .",
     "format:write": "biome format --write .",
     "check": "biome check .",
-    "check:write": "biome check --write ."
+    "check:write": "biome check --write .",
+    "lint:fix": "biome format --write ."
   },
   "dependencies": {
     "firebase-admin": "14.0.0",

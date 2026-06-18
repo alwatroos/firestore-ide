@@ -13,6 +13,11 @@ export interface QueryTab {
   queryDraft: string
   queryResults: DocumentRecord[]
   selectedDocument: DocumentRecord | null
+  aiInstruction: string
+  aiStreamText: string
+  aiDraft: string
+  aiBusy: boolean
+  aiError: string | null
 }
 
 let _counter = 0
@@ -33,5 +38,10 @@ export function createTab(): QueryTab {
     queryDraft: '',
     queryResults: [],
     selectedDocument: null,
+    aiInstruction: '',
+    aiStreamText: '',
+    aiDraft: '',
+    aiBusy: false,
+    aiError: null,
   }
 }

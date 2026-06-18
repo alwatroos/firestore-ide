@@ -98,6 +98,46 @@ export const queryResultsAtom = atom(
   }
 )
 
+/**
+ * AI instruction input for the active tab.
+ * Accepts a direct value or an updater function (PrimitiveAtom-compatible).
+ */
+export const aiInstructionAtom = atom(
+  (get) => get(activeTabStateAtom).aiInstruction,
+  (get, set, action: SetStateAction<string>) => {
+    const id = get(activeQueryTabIdAtom)
+    set(queryTabsAtom, (tabs) =>
+      tabs.map((t) => (t.id === id ? { ...t, aiInstruction: resolve(action, t.aiInstruction) } : t))
+    )
+  }
+)
+
+/**
+ * AI streaming output for the active tab (read-only from the panel's perspective;
+ * written directly via the store in {@link AiQueryPanel} to support concurrency).
+ */
+export const aiStreamTextAtom = atom((get) => get(activeTabStateAtom).aiStreamText)
+
+/**
+ * Generated query draft for the active tab awaiting review.
+ * Accepts a direct value or an updater function (PrimitiveAtom-compatible).
+ */
+export const aiDraftAtom = atom(
+  (get) => get(activeTabStateAtom).aiDraft,
+  (get, set, action: SetStateAction<string>) => {
+    const id = get(activeQueryTabIdAtom)
+    set(queryTabsAtom, (tabs) =>
+      tabs.map((t) => (t.id === id ? { ...t, aiDraft: resolve(action, t.aiDraft) } : t))
+    )
+  }
+)
+
+/** Whether AI generation is in progress for the active tab. */
+export const aiBusyAtom = atom((get) => get(activeTabStateAtom).aiBusy)
+
+/** Most recent AI generation error for the active tab, or `null`. */
+export const aiErrorAtom = atom((get) => get(activeTabStateAtom).aiError)
+
 // ─── Tab action atoms ─────────────────────────────────────────────────────────
 
 /** Add a new query tab and make it active. */

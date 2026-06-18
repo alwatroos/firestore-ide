@@ -6,7 +6,7 @@ import { AiQueryPanel } from './domains/ai/AiQueryPanel'
 import { activeConnectionAtom } from './domains/connections/atoms'
 import { selectedDocumentAtom } from './domains/documents/atoms'
 import { DocumentEditor } from './domains/documents/DocumentEditor'
-import { documentsVersionAtom } from './domains/explorer/atoms'
+import { activeQueryTabIdAtom, documentsVersionAtom } from './domains/explorer/atoms'
 import { ExplorerPane } from './domains/explorer/ExplorerPane'
 import { QueryTabBar } from './domains/explorer/QueryTabBar'
 import { RulesDialog } from './domains/rules/RulesDialog'
@@ -32,14 +32,18 @@ interface MainContentProps {
  */
 function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps): ReactNode {
   const selectedDocument = useAtomValue(selectedDocumentAtom)
+  const activeTabId = useAtomValue(activeQueryTabIdAtom)
   const editor = <DocumentEditor connectionId={connectionId} onSaved={onSaved} />
+  // key forces a fresh component instance (and fresh hooks) for each tab while
+  // the per-tab atoms preserve the instruction/draft/stream state across switches.
+  const aiPanel = <AiQueryPanel key={activeTabId} onOpenSettings={onOpenSettings} />
 
   if (!selectedDocument) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <QueryTabBar />
         <ExplorerPane />
-        <AiQueryPanel onOpenSettings={onOpenSettings} />
+        {aiPanel}
       </div>
     )
   }
@@ -48,7 +52,7 @@ function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps
     <div className="flex min-h-0 flex-1 flex-col">
       <QueryTabBar />
       <ResizableSplit left={<ExplorerPane />} right={editor} />
-      <AiQueryPanel onOpenSettings={onOpenSettings} />
+      {aiPanel}
     </div>
   )
 }

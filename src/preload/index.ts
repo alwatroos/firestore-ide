@@ -1,4 +1,4 @@
-import { IPC } from '@shared/ipc/channels'
+import { IPC, streamChannels } from '@shared/ipc/channels'
 import type { FirestoreIdeApi } from '@shared/types/api'
 import type { GeneratedQuery } from '@shared/types/ollama'
 import { contextBridge, type IpcRendererEvent, ipcRenderer } from 'electron'
@@ -31,24 +31,26 @@ const api: FirestoreIdeApi = {
   listModels: (host) => ipcRenderer.invoke(IPC.ollamaListModels, host),
   generateQuery: (input) => ipcRenderer.invoke(IPC.ollamaGenerateQuery, input),
   generateQueryStream: (input, onChunk, onDone, onError) => {
+    const streamId = crypto.randomUUID()
+    const ch = streamChannels(streamId)
     let active = true
     function chunkHandler(_: IpcRendererEvent, text: string) {
       if (active) onChunk(text)
     }
     function cleanup() {
       active = false
-      ipcRenderer.removeListener(IPC.ollamaStreamChunk, chunkHandler)
+      ipcRenderer.removeListener(ch.chunk, chunkHandler)
     }
-    ipcRenderer.on(IPC.ollamaStreamChunk, chunkHandler)
-    ipcRenderer.once(IPC.ollamaStreamDone, (_: IpcRendererEvent, result: GeneratedQuery) => {
+    ipcRenderer.on(ch.chunk, chunkHandler)
+    ipcRenderer.once(ch.done, (_: IpcRendererEvent, result: GeneratedQuery) => {
       cleanup()
       onDone(result)
     })
-    ipcRenderer.once(IPC.ollamaStreamError, (_: IpcRendererEvent, error: string) => {
+    ipcRenderer.once(ch.error, (_: IpcRendererEvent, error: string) => {
       cleanup()
       onError(error)
     })
-    ipcRenderer.send(IPC.ollamaGenerateQueryStream, input)
+    ipcRenderer.send(IPC.ollamaGenerateQueryStream, input, streamId)
     return cleanup
   },
   saveFile: (suggestedName, content, filters) =>
