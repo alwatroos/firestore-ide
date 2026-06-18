@@ -23,19 +23,22 @@ function Section({ title, children }: { title: string; children: ReactNode }): R
 
 /**
  * Left navigation: connections, the add-connection form and collections.
+ * Width is controlled by the parent; this component fills its container.
  *
- * @param props - `onOpenSettings` opens the settings dialog.
+ * @param props - `onOpenSettings` opens the settings dialog, `onToggle` collapses the sidebar.
  * @returns The rendered sidebar.
  */
 export function Sidebar({
   onOpenSettings,
   onOpenRules,
+  onToggle,
 }: {
   onOpenSettings: () => void
   onOpenRules: () => void
+  onToggle: () => void
 }): ReactNode {
   return (
-    <aside className="flex w-72 flex-col border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+    <aside className="flex h-full w-full flex-col border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
       <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 py-2">
         <h1 className="text-sm font-bold text-slate-700 dark:text-slate-300">Firestore IDE</h1>
         <div className="flex gap-1">
@@ -49,6 +52,14 @@ export function Sidebar({
           </Button>
           <Button variant="ghost" onClick={onOpenSettings} aria-label="Settings">
             ⚙
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onToggle}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            ◀
           </Button>
         </div>
       </header>
