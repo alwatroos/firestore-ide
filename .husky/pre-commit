@@ -1,2 +1,7 @@
-pnpm exec biome check --staged
+# Run Biome only when at least one supported file (JS/TS/JSON/CSS) is staged.
+# Biome exits with code 1 when given only unsupported files (e.g. .yaml, .md),
+# which would block every lockfile/config/docs-only commit.
+if git diff --cached --name-only | grep -qE '\.(js|jsx|ts|tsx|json|css)$'; then
+  pnpm exec biome check --staged
+fi
 pnpm test
