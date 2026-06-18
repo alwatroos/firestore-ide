@@ -1,8 +1,12 @@
 {
   "name": "firestore-ide",
   "version": "0.2.1",
-  "description": "Desktop IDE for Google Cloud Firestore with Ollama-powered query generation.",
-  "author": "firestore-ide",
+  "description": "Desktop IDE for Google Cloud Firestore with AI-powered query generation.",
+  "author": {
+    "name": "Karol Płoski",
+    "email": "k.ploski@hotmail.com",
+    "url": "https://karolploski.dev"
+  },
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@11.7.0",
