@@ -175,8 +175,11 @@ Trigger: **Actions → "Release – Fix (patch bump) – Create Hotfix" → Run 
   secrets and config when distribution requires it.
 - electron-builder runs with `publish: null`; release assets are uploaded by the
   workflow (`softprops/action-gh-release`), not by electron-builder.
-- The bot pushes directly to `main` and `develop` via `GITHUB_TOKEN`. If those
-  branches have push-protection rules, either disable them for the Actions bot or
-  replace `secrets.GITHUB_TOKEN` with a PAT stored in `secrets.BOT_TOKEN`.
+- **`secrets.RELEASE_PAT` is required.** The `develop` branch ruleset blocks
+  direct pushes without Maintain+ access. Create a classic PAT (`repo` scope) from
+  the repo owner's account and store it in the repository secret `RELEASE_PAT`.
+  Without it, back-merge steps fail with "Changes must be made through a pull
+  request." The workflows fall back to `GITHUB_TOKEN` if the secret is absent,
+  which works only when the develop ruleset is not yet enforced.
 - Back-merge steps will fail if `main` and `develop` have diverged with conflicts;
   resolve manually and re-run the failed job.
