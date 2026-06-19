@@ -1,9 +1,9 @@
-import { type App, cert, deleteApp, initializeApp } from 'firebase-admin/app'
-import { type Firestore, getFirestore } from 'firebase-admin/firestore'
-import { getCredentials } from '../connections/service'
+import { type App, cert, deleteApp, initializeApp } from 'firebase-admin/app';
+import { type Firestore, getFirestore } from 'firebase-admin/firestore';
+import { getCredentials } from '../connections/service';
 
 /** Cache of initialised Firebase apps keyed by connection id. */
-const apps = new Map<string, App>()
+const apps = new Map<string, App>();
 
 /**
  * Get (or lazily create) the Firebase app for a connection.
@@ -12,17 +12,17 @@ const apps = new Map<string, App>()
  * @returns The initialised Firebase app.
  */
 async function getApp(connectionId: string): Promise<App> {
-  const existing = apps.get(connectionId)
-  if (existing) return existing
-  const account = await getCredentials(connectionId)
+  const existing = apps.get(connectionId);
+  if (existing) return existing;
+  const account = await getCredentials(connectionId);
   const credential = cert({
     projectId: account.project_id,
     clientEmail: account.client_email,
     privateKey: account.private_key,
-  })
-  const app = initializeApp({ credential }, connectionId)
-  apps.set(connectionId, app)
-  return app
+  });
+  const app = initializeApp({ credential }, connectionId);
+  apps.set(connectionId, app);
+  return app;
 }
 
 /**
@@ -32,7 +32,7 @@ async function getApp(connectionId: string): Promise<App> {
  * @returns A ready-to-use Firestore client.
  */
 export async function getDb(connectionId: string): Promise<Firestore> {
-  return getFirestore(await getApp(connectionId))
+  return getFirestore(await getApp(connectionId));
 }
 
 /**
@@ -44,11 +44,11 @@ export async function getDb(connectionId: string): Promise<Firestore> {
  * @throws If the app has no usable credential.
  */
 export async function getAccessToken(connectionId: string): Promise<string> {
-  const app = await getApp(connectionId)
-  const credential = app.options.credential
-  if (!credential) throw new Error('No credential available for this connection')
-  const token = await credential.getAccessToken()
-  return token.access_token
+  const app = await getApp(connectionId);
+  const credential = app.options.credential;
+  if (!credential) throw new Error('No credential available for this connection');
+  const token = await credential.getAccessToken();
+  return token.access_token;
 }
 
 /**
@@ -58,7 +58,7 @@ export async function getAccessToken(connectionId: string): Promise<string> {
  * @returns Resolves once the app is deleted.
  */
 export async function disposeClient(connectionId: string): Promise<void> {
-  const app = apps.get(connectionId)
-  if (app) await deleteApp(app)
-  apps.delete(connectionId)
+  const app = apps.get(connectionId);
+  if (app) await deleteApp(app);
+  apps.delete(connectionId);
 }

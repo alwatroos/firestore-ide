@@ -1,29 +1,29 @@
-import type { DocumentRecord } from '@shared/types/firestore'
-import { useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Empty, ErrorBanner } from '../../components/ui'
-import { activeConnectionAtom } from '../connections/atoms'
-import { useReadOnly } from '../connections/hooks'
-import { selectedDocumentAtom } from '../documents/atoms'
-import { useOpenDocument } from '../documents/hooks'
-import { selectedCollectionAtom } from './atoms'
-import { CellValue } from './CellValue'
-import { collectColumns } from './columns'
-import { useDocuments } from './hooks'
-import { TransferControls } from './TransferControls'
+import type { DocumentRecord } from '@shared/types/firestore';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Empty, ErrorBanner } from '../../components/ui';
+import { activeConnectionAtom } from '../connections/atoms';
+import { useReadOnly } from '../connections/hooks';
+import { selectedDocumentAtom } from '../documents/atoms';
+import { useOpenDocument } from '../documents/hooks';
+import { selectedCollectionAtom } from './atoms';
+import { CellValue } from './CellValue';
+import { collectColumns } from './columns';
+import { useDocuments } from './hooks';
+import { TransferControls } from './TransferControls';
 
 /** Approximate height of each data row in pixels (matches py-1.5 + text-xs). */
-const ROW_HEIGHT = 28
+const ROW_HEIGHT = 28;
 /** Extra rows to render above and below the visible window. */
-const OVERSCAN = 5
+const OVERSCAN = 5;
 
 /** Direction of a column sort. */
-type SortDir = 'asc' | 'desc'
+type SortDir = 'asc' | 'desc';
 
 /** Active sort state: which column and which direction. */
 interface SortState {
-  column: string
-  dir: SortDir
+  column: string;
+  dir: SortDir;
 }
 
 /**
@@ -35,10 +35,10 @@ interface SortState {
  * @returns Negative, zero, or positive comparison result.
  */
 function compareValues(a: unknown, b: unknown): number {
-  if (a === null || a === undefined) return 1
-  if (b === null || b === undefined) return -1
-  if (typeof a === 'number' && typeof b === 'number') return a - b
-  return String(a).localeCompare(String(b))
+  if (a === null || a === undefined) return 1;
+  if (b === null || b === undefined) return -1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b));
 }
 
 /**
@@ -48,18 +48,18 @@ function compareValues(a: unknown, b: unknown): number {
  * @returns An empty document with a generated id.
  */
 function blankDocument(collection: string): DocumentRecord {
-  const id = crypto.randomUUID()
-  return { id, path: `${collection}/${id}`, data: {} }
+  const id = crypto.randomUUID();
+  return { id, path: `${collection}/${id}`, data: {} };
 }
 
 /** Props for {@link Toolbar}. */
 interface ToolbarProps {
-  name: string
-  count: number
-  hasMore: boolean
-  canCreate: boolean
-  onNew: () => void
-  onRefresh: () => void
+  name: string;
+  count: number;
+  hasMore: boolean;
+  canCreate: boolean;
+  onNew: () => void;
+  onRefresh: () => void;
 }
 
 /**
@@ -89,13 +89,13 @@ function Toolbar({ name, count, hasMore, canCreate, onNew, onRefresh }: ToolbarP
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 /** Props for {@link SortIndicator}. */
 interface SortIndicatorProps {
-  column: string
-  sort: SortState | null
+  column: string;
+  sort: SortState | null;
 }
 
 /**
@@ -107,17 +107,17 @@ interface SortIndicatorProps {
  */
 function SortIndicator({ column, sort }: SortIndicatorProps): ReactNode {
   if (sort?.column === column) {
-    return <span className="ml-1">{sort.dir === 'asc' ? '↑' : '↓'}</span>
+    return <span className="ml-1">{sort.dir === 'asc' ? '↑' : '↓'}</span>;
   }
-  return <span className="ml-1 opacity-0 group-hover:opacity-40">↕</span>
+  return <span className="ml-1 opacity-0 group-hover:opacity-40">↕</span>;
 }
 
 /** Props for {@link DocRow}. */
 interface DocRowProps {
-  doc: DocumentRecord
-  columns: string[]
-  onClick: () => void
-  onOpenRef: (path: string) => void
+  doc: DocumentRecord;
+  columns: string[];
+  onClick: () => void;
+  onOpenRef: (path: string) => void;
 }
 
 /**
@@ -139,7 +139,7 @@ function DocRow({ doc, columns, onClick, onOpenRef }: DocRowProps): ReactNode {
         </td>
       ))}
     </tr>
-  )
+  );
 }
 
 /**
@@ -158,21 +158,21 @@ function VirtualBody({
   onSelect,
   onOpenRef,
 }: {
-  documents: DocumentRecord[]
-  columns: string[]
-  scrollTop: number
-  containerHeight: number
-  onSelect: (doc: DocumentRecord) => void
-  onOpenRef: (path: string) => void
+  documents: DocumentRecord[];
+  columns: string[];
+  scrollTop: number;
+  containerHeight: number;
+  onSelect: (doc: DocumentRecord) => void;
+  onOpenRef: (path: string) => void;
 }): ReactNode {
-  const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
+  const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
   const end = Math.min(
     documents.length,
     Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + OVERSCAN
-  )
-  const paddingTop = start * ROW_HEIGHT
-  const paddingBottom = (documents.length - end) * ROW_HEIGHT
-  const colCount = columns.length + 1
+  );
+  const paddingTop = start * ROW_HEIGHT;
+  const paddingBottom = (documents.length - end) * ROW_HEIGHT;
+  const colCount = columns.length + 1;
 
   return (
     <tbody>
@@ -196,7 +196,7 @@ function VirtualBody({
         </tr>
       )}
     </tbody>
-  )
+  );
 }
 
 /**
@@ -208,46 +208,46 @@ function VirtualBody({
  * @returns The rendered table or an empty-state placeholder.
  */
 export function DocumentTable(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const collection = useAtomValue(selectedCollectionAtom)
+  const active = useAtomValue(activeConnectionAtom);
+  const collection = useAtomValue(selectedCollectionAtom);
   const { documents, error, busy, refresh, loadMore, hasMore } = useDocuments(
     active?.id ?? null,
     collection
-  )
-  const setDocument = useSetAtom(selectedDocumentAtom)
-  const readOnly = useReadOnly()
-  const { open: openRef } = useOpenDocument(active?.id ?? null)
+  );
+  const setDocument = useSetAtom(selectedDocumentAtom);
+  const readOnly = useReadOnly();
+  const { open: openRef } = useOpenDocument(active?.id ?? null);
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const sentinelRef = useRef<HTMLDivElement>(null)
-  const [scrollTop, setScrollTop] = useState(0)
-  const [containerHeight, setContainerHeight] = useState(500)
-  const [sort, setSort] = useState<SortState | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(500);
+  const [sort, setSort] = useState<SortState | null>(null);
 
   // Track container height for virtual window calculation.
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    setContainerHeight(el.clientHeight)
-    const ro = new ResizeObserver(([entry]) => setContainerHeight(entry.contentRect.height))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerHeight(el.clientHeight);
+    const ro = new ResizeObserver(([entry]) => setContainerHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Auto-load when the sentinel div becomes visible at the bottom.
-  const loadMoreStable = useCallback(() => loadMore(), [loadMore])
+  const loadMoreStable = useCallback(() => loadMore(), [loadMore]);
   useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel || !hasMore || busy) return
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore || busy) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) void loadMoreStable()
+        if (entry.isIntersecting) void loadMoreStable();
       },
       { threshold: 0.1 }
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [hasMore, busy, loadMoreStable])
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, busy, loadMoreStable]);
 
   /**
    * Cycle sort for a column: none → asc → desc → none.
@@ -256,25 +256,25 @@ export function DocumentTable(): ReactNode {
    */
   function handleSort(column: string): void {
     setSort((prev) => {
-      if (!prev || prev.column !== column) return { column, dir: 'asc' }
-      if (prev.dir === 'asc') return { column, dir: 'desc' }
-      return null
-    })
+      if (!prev || prev.column !== column) return { column, dir: 'asc' };
+      if (prev.dir === 'asc') return { column, dir: 'desc' };
+      return null;
+    });
   }
 
   const sortedDocuments = useMemo(() => {
-    if (!sort) return documents
+    if (!sort) return documents;
     return [...documents].sort((a, b) => {
-      const aVal = sort.column === 'id' ? a.id : a.data[sort.column]
-      const bVal = sort.column === 'id' ? b.id : b.data[sort.column]
-      const cmp = compareValues(aVal, bVal)
-      return sort.dir === 'asc' ? cmp : -cmp
-    })
-  }, [documents, sort])
+      const aVal = sort.column === 'id' ? a.id : a.data[sort.column];
+      const bVal = sort.column === 'id' ? b.id : b.data[sort.column];
+      const cmp = compareValues(aVal, bVal);
+      return sort.dir === 'asc' ? cmp : -cmp;
+    });
+  }, [documents, sort]);
 
-  if (!collection) return <Empty text="Select a collection to view documents" />
+  if (!collection) return <Empty text="Select a collection to view documents" />;
 
-  const columns = collectColumns(documents)
+  const columns = collectColumns(documents);
 
   return (
     <div className="flex h-full flex-col">
@@ -335,5 +335,5 @@ export function DocumentTable(): ReactNode {
         <div ref={sentinelRef} style={{ height: 1 }} />
       </div>
     </div>
-  )
+  );
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs';
 
 /** Allowed Conventional Commits types. */
 const TYPES = [
@@ -14,13 +14,13 @@ const TYPES = [
   'build',
   'ci',
   'revert',
-]
+];
 
 /** Matches `type(scope)?!?: subject`, e.g. `feat(ai): add panel`. */
-const PATTERN = new RegExp(`^(${TYPES.join('|')})(\\([^)]+\\))?!?: .+`)
+const PATTERN = new RegExp(`^(${TYPES.join('|')})(\\([^)]+\\))?!?: .+`);
 
 /** Prefixes for auto-generated commits that should bypass validation. */
-const ALLOWED_PREFIXES = ['Merge ', 'Revert ', 'fixup!', 'squash!']
+const ALLOWED_PREFIXES = ['Merge ', 'Revert ', 'fixup!', 'squash!'];
 
 /**
  * Read the first non-comment line of the commit message file.
@@ -29,9 +29,9 @@ const ALLOWED_PREFIXES = ['Merge ', 'Revert ', 'fixup!', 'squash!']
  * @returns {string} The trimmed subject line.
  */
 function readSubject(path) {
-  const lines = readFileSync(path, 'utf8').split('\n')
-  const subject = lines.find((line) => line.trim() && !line.startsWith('#'))
-  return (subject ?? '').trim()
+  const lines = readFileSync(path, 'utf8').split('\n');
+  const subject = lines.find((line) => line.trim() && !line.startsWith('#'));
+  return (subject ?? '').trim();
 }
 
 /**
@@ -41,11 +41,11 @@ function readSubject(path) {
  * @returns {never} Never returns; terminates the process.
  */
 function fail(subject) {
-  console.error(`\n✖ Invalid commit message:\n  ${subject}`)
-  console.error('\n  Expected Conventional Commits format: <type>(scope)?: <subject>')
-  console.error(`  Allowed types: ${TYPES.join(', ')}`)
-  console.error('  Example: feat(explorer): add document filtering\n')
-  process.exit(1)
+  console.error(`\n✖ Invalid commit message:\n  ${subject}`);
+  console.error('\n  Expected Conventional Commits format: <type>(scope)?: <subject>');
+  console.error(`  Allowed types: ${TYPES.join(', ')}`);
+  console.error('  Example: feat(explorer): add document filtering\n');
+  process.exit(1);
 }
 
 /**
@@ -54,9 +54,9 @@ function fail(subject) {
  * @returns {void}
  */
 function main() {
-  const subject = readSubject(process.argv[2])
-  if (ALLOWED_PREFIXES.some((prefix) => subject.startsWith(prefix))) return
-  if (!PATTERN.test(subject)) fail(subject)
+  const subject = readSubject(process.argv[2]);
+  if (ALLOWED_PREFIXES.some((prefix) => subject.startsWith(prefix))) return;
+  if (!PATTERN.test(subject)) fail(subject);
 }
 
-main()
+main();

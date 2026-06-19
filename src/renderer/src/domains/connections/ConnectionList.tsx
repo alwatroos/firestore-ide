@@ -1,20 +1,20 @@
-import type { ConnectionMeta } from '@shared/types/connection'
-import { type ReactNode, useState } from 'react'
-import { ConfirmDialog, Empty, ErrorBanner } from '../../components/ui'
-import { useConnectionActions, useConnections } from './hooks'
+import type { ConnectionMeta } from '@shared/types/connection';
+import { type ReactNode, useState } from 'react';
+import { ConfirmDialog, Empty, ErrorBanner } from '../../components/ui';
+import { useConnectionActions, useConnections } from './hooks';
 
 /** Props for a single connection row. */
 interface RowProps {
   /** The connection to render. */
-  connection: ConnectionMeta
+  connection: ConnectionMeta;
   /** Whether this row is the active connection. */
-  active: boolean
+  active: boolean;
   /** Select handler. */
-  onSelect: () => void
+  onSelect: () => void;
   /** Toggle the per-connection read-only flag. */
-  onToggleReadOnly: () => void
+  onToggleReadOnly: () => void;
   /** Remove handler. */
-  onRemove: () => void
+  onRemove: () => void;
 }
 
 /**
@@ -32,8 +32,8 @@ function ConnectionRow({
 }: RowProps): ReactNode {
   const activeClass = active
     ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700'
-    : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'
-  const readOnly = connection.readOnly === true
+    : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800';
+  const readOnly = connection.readOnly === true;
   return (
     <li className={`flex items-center justify-between rounded border px-2 py-1.5 ${activeClass}`}>
       <button type="button" className="min-w-0 flex-1 text-left" onClick={onSelect}>
@@ -66,7 +66,7 @@ function ConnectionRow({
         ✕
       </button>
     </li>
-  )
+  );
 }
 
 /**
@@ -75,10 +75,10 @@ function ConnectionRow({
  * @returns The rendered connection list.
  */
 export function ConnectionList(): ReactNode {
-  const { connections, activeId, setActiveId, error, refresh } = useConnections()
-  const actions = useConnectionActions(refresh)
-  const [pendingRemove, setPendingRemove] = useState<ConnectionMeta | null>(null)
-  if (connections.length === 0) return <Empty text="No connections yet" />
+  const { connections, activeId, setActiveId, error, refresh } = useConnections();
+  const actions = useConnectionActions(refresh);
+  const [pendingRemove, setPendingRemove] = useState<ConnectionMeta | null>(null);
+  if (connections.length === 0) return <Empty text="No connections yet" />;
   return (
     <>
       <ErrorBanner message={error ?? actions.error} />
@@ -104,8 +104,8 @@ export function ConnectionList(): ReactNode {
           busy={actions.busy}
           onCancel={() => setPendingRemove(null)}
           onConfirm={() => {
-            void actions.remove(pendingRemove.id)
-            setPendingRemove(null)
+            void actions.remove(pendingRemove.id);
+            setPendingRemove(null);
           }}
         >
           <p>
@@ -115,5 +115,5 @@ export function ConnectionList(): ReactNode {
         </ConfirmDialog>
       )}
     </>
-  )
+  );
 }

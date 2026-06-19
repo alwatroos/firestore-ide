@@ -1,8 +1,8 @@
-import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, ErrorBanner, WarningList } from '../../components/ui'
-import { api } from '../../lib/api'
-import { activeConnectionAtom } from '../connections/atoms'
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, ErrorBanner, WarningList } from '../../components/ui';
+import { api } from '../../lib/api';
+import { activeConnectionAtom } from '../connections/atoms';
 import {
   activeQueryTabIdAtom,
   activeTabAtom,
@@ -14,18 +14,18 @@ import {
   queryResultsAtom,
   queryTabsAtom,
   selectedCollectionAtom,
-} from '../explorer/atoms'
-import { useQueryRunner } from '../explorer/hooks'
-import { queryWarnings } from '../explorer/queryWarnings'
-import { useQueryHistory } from '../queries/hooks'
-import { useSettings } from '../settings/hooks'
-import { useModels } from './hooks'
-import { parseQuerySpec } from './parse'
+} from '../explorer/atoms';
+import { useQueryRunner } from '../explorer/hooks';
+import { queryWarnings } from '../explorer/queryWarnings';
+import { useQueryHistory } from '../queries/hooks';
+import { useSettings } from '../settings/hooks';
+import { useModels } from './hooks';
+import { parseQuerySpec } from './parse';
 
 /** Props for {@link AiQueryPanel}. */
 interface AiQueryPanelProps {
   /** Opens the settings dialog so the user can configure the Ollama host. */
-  onOpenSettings: () => void
+  onOpenSettings: () => void;
 }
 
 /**
@@ -46,7 +46,7 @@ function OllamaUnavailableHint({ onOpenSettings }: { onOpenSettings: () => void 
         Open Settings
       </button>
     </div>
-  )
+  );
 }
 
 /**
@@ -56,12 +56,12 @@ function OllamaUnavailableHint({ onOpenSettings }: { onOpenSettings: () => void 
  * @returns The rendered terminal-style log, or `null` when empty.
  */
 function StreamingLog({ text, busy }: { text: string; busy: boolean }): ReactNode {
-  const ref = useRef<HTMLPreElement>(null)
+  const ref = useRef<HTMLPreElement>(null);
   // No dep array — runs after every render; scrolls on each new token.
   useEffect(() => {
-    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight
-  })
-  if (!text && !busy) return null
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+  });
+  if (!text && !busy) return null;
   return (
     <div className="rounded border border-slate-700 bg-slate-900">
       <div className="flex items-center gap-1.5 border-b border-slate-700 px-3 py-1">
@@ -77,7 +77,7 @@ function StreamingLog({ text, busy }: { text: string; busy: boolean }): ReactNod
         {text || '…'}
       </pre>
     </div>
-  )
+  );
 }
 
 /**
@@ -88,9 +88,9 @@ function StreamingLog({ text, busy }: { text: string; busy: boolean }): ReactNod
  */
 function prettyJson(raw: string): string {
   try {
-    return JSON.stringify(JSON.parse(raw), null, 2)
+    return JSON.stringify(JSON.parse(raw), null, 2);
   } catch {
-    return raw
+    return raw;
   }
 }
 
@@ -112,12 +112,12 @@ async function applySpec(
   setLocalError: (msg: string | null) => void
 ): Promise<void> {
   try {
-    const spec = parseQuerySpec(raw)
-    setCollection(spec.collectionPath)
-    await runSpec(spec)
-    setTab('query')
+    const spec = parseQuerySpec(raw);
+    setCollection(spec.collectionPath);
+    await runSpec(spec);
+    setTab('query');
   } catch (caught) {
-    setLocalError(caught instanceof Error ? caught.message : 'Failed to parse generated query')
+    setLocalError(caught instanceof Error ? caught.message : 'Failed to parse generated query');
   }
 }
 
@@ -130,13 +130,13 @@ function patchTab(
   store: ReturnType<typeof useStore>,
   tabId: string,
   patch: Partial<{
-    aiStreamText: string
-    aiDraft: string
-    aiBusy: boolean
-    aiError: string | null
+    aiStreamText: string;
+    aiDraft: string;
+    aiBusy: boolean;
+    aiError: string | null;
   }>
 ) {
-  store.set(queryTabsAtom, (tabs) => tabs.map((t) => (t.id === tabId ? { ...t, ...patch } : t)))
+  store.set(queryTabsAtom, (tabs) => tabs.map((t) => (t.id === tabId ? { ...t, ...patch } : t)));
 }
 
 /**
@@ -146,7 +146,7 @@ function patchTab(
 function appendChunk(store: ReturnType<typeof useStore>, tabId: string, chunk: string) {
   store.set(queryTabsAtom, (tabs) =>
     tabs.map((t) => (t.id === tabId ? { ...t, aiStreamText: t.aiStreamText + chunk } : t))
-  )
+  );
 }
 
 /**
@@ -158,26 +158,26 @@ function appendChunk(store: ReturnType<typeof useStore>, tabId: string, chunk: s
  * @returns The rendered assistant panel.
  */
 export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
-  const store = useStore()
-  const active = useAtomValue(activeConnectionAtom)
-  const activeTabId = useAtomValue(activeQueryTabIdAtom)
-  const { settings } = useSettings()
-  const { models, selected, setSelected, error: modelError } = useModels(settings.ollamaHost)
+  const store = useStore();
+  const active = useAtomValue(activeConnectionAtom);
+  const activeTabId = useAtomValue(activeQueryTabIdAtom);
+  const { settings } = useSettings();
+  const { models, selected, setSelected, error: modelError } = useModels(settings.ollamaHost);
 
   // Per-tab AI state
-  const [instruction, setInstruction] = useAtom(aiInstructionAtom)
-  const streamText = useAtomValue(aiStreamTextAtom)
-  const [draft, setDraft] = useAtom(aiDraftAtom)
-  const busy = useAtomValue(aiBusyAtom)
-  const aiError = useAtomValue(aiErrorAtom)
+  const [instruction, setInstruction] = useAtom(aiInstructionAtom);
+  const streamText = useAtomValue(aiStreamTextAtom);
+  const [draft, setDraft] = useAtom(aiDraftAtom);
+  const busy = useAtomValue(aiBusyAtom);
+  const aiError = useAtomValue(aiErrorAtom);
 
   // Transient UI state (local — resets on tab switch intentionally)
-  const [localError, setLocalError] = useState<string | null>(null)
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const { runSpec, busy: runBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom)
-  const { record } = useQueryHistory()
-  const setCollection = useSetAtom(selectedCollectionAtom)
-  const setTab = useSetAtom(activeTabAtom)
+  const { runSpec, busy: runBusy } = useQueryRunner(active?.id ?? null, queryResultsAtom);
+  const { record } = useQueryHistory();
+  const setCollection = useSetAtom(selectedCollectionAtom);
+  const setTab = useSetAtom(activeTabAtom);
 
   /**
    * Stream a query for the current instruction.
@@ -187,11 +187,11 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
    * @returns Resolves once generation completes or fails.
    */
   async function onGenerate(): Promise<void> {
-    setLocalError(null)
-    if (!active) return setLocalError('Select a connection first')
+    setLocalError(null);
+    if (!active) return setLocalError('Select a connection first');
 
-    const tabId = activeTabId
-    patchTab(store, tabId, { aiStreamText: '', aiDraft: '', aiBusy: true, aiError: null })
+    const tabId = activeTabId;
+    patchTab(store, tabId, { aiStreamText: '', aiDraft: '', aiBusy: true, aiError: null });
 
     try {
       const result = await new Promise<{ raw: string }>((resolve, reject) => {
@@ -199,21 +199,21 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
           { connectionId: active.id, model: selected, instruction },
           (chunk) => appendChunk(store, tabId, chunk),
           (res) => {
-            cleanup()
-            resolve(res)
+            cleanup();
+            resolve(res);
           },
           (errMsg) => {
-            cleanup()
-            reject(new Error(errMsg))
+            cleanup();
+            reject(new Error(errMsg));
           }
-        )
-      })
-      patchTab(store, tabId, { aiBusy: false, aiDraft: prettyJson(result.raw) })
+        );
+      });
+      patchTab(store, tabId, { aiBusy: false, aiDraft: prettyJson(result.raw) });
     } catch (err) {
       patchTab(store, tabId, {
         aiBusy: false,
         aiError: err instanceof Error ? err.message : 'Generation failed',
-      })
+      });
     }
   }
 
@@ -223,23 +223,23 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
    * @returns Resolves once the query has run or an error is surfaced.
    */
   async function onRun(): Promise<void> {
-    setLocalError(null)
-    await applySpec(draft, setCollection, setTab, runSpec, setLocalError)
-    if (active) void record({ connectionId: active.id, kind: 'ai', query: draft, instruction })
+    setLocalError(null);
+    await applySpec(draft, setCollection, setTab, runSpec, setLocalError);
+    if (active) void record({ connectionId: active.id, kind: 'ai', query: draft, instruction });
   }
 
   // Advisory warnings for the draft query, recomputed as the user edits it.
   const warnings = useMemo(() => {
-    if (!draft.trim()) return []
+    if (!draft.trim()) return [];
     try {
-      return queryWarnings(parseQuerySpec(draft))
+      return queryWarnings(parseQuerySpec(draft));
     } catch {
-      return []
+      return [];
     }
-  }, [draft])
+  }, [draft]);
 
-  const noModels = models.length === 0
-  const canGenerate = !busy && !noModels && !!selected && !!instruction.trim()
+  const noModels = models.length === 0;
+  const canGenerate = !busy && !noModels && !!selected && !!instruction.trim();
 
   return (
     <div className="shrink-0 space-y-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-3">
@@ -272,8 +272,8 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
             onChange={(e) => setInstruction(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                if (canGenerate) void onGenerate()
+                e.preventDefault();
+                if (canGenerate) void onGenerate();
               }
             }}
           />
@@ -312,5 +312,5 @@ export function AiQueryPanel({ onOpenSettings }: AiQueryPanelProps): ReactNode {
 
       <ErrorBanner message={localError ?? aiError ?? (noModels ? null : modelError)} />
     </div>
-  )
+  );
 }

@@ -35,10 +35,10 @@ export const IPC = {
   ollamaStreamError: 'ollama:streamError',
   settingsGet: 'settings:get',
   settingsSave: 'settings:save',
-} as const
+} as const;
 
 /** Union of all valid IPC channel names. */
-export type IpcChannel = (typeof IPC)[keyof typeof IPC]
+export type IpcChannel = (typeof IPC)[keyof typeof IPC];
 
 /**
  * Per-stream channel names derived from a unique stream id.
@@ -53,5 +53,5 @@ export function streamChannels(streamId: string) {
     chunk: `ollama:streamChunk:${streamId}`,
     done: `ollama:streamDone:${streamId}`,
     error: `ollama:streamError:${streamId}`,
-  } as const
+  } as const;
 }

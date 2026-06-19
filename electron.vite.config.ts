@@ -1,9 +1,9 @@
-import { resolve } from 'node:path'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import { resolve } from 'node:path';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 
-const root = import.meta.dirname
+const root = import.meta.dirname;
 
 export default defineConfig({
   main: {
@@ -27,4 +27,4 @@ export default defineConfig({
     plugins: [react(), tailwindcss()],
     build: { rollupOptions: { input: resolve(root, 'src/renderer/index.html') } },
   },
-})
+});

@@ -1,6 +1,6 @@
-import { FIELD_MARKERS } from '@shared/types/firestore'
-import { markerKind } from '@shared/utils/markers'
-import { DocumentReference, type Firestore, GeoPoint, Timestamp } from 'firebase-admin/firestore'
+import { FIELD_MARKERS } from '@shared/types/firestore';
+import { markerKind } from '@shared/utils/markers';
+import { DocumentReference, type Firestore, GeoPoint, Timestamp } from 'firebase-admin/firestore';
 
 /**
  * Convert a single Firestore-native value into a JSON-serialisable form so it
@@ -12,14 +12,15 @@ import { DocumentReference, type Firestore, GeoPoint, Timestamp } from 'firebase
  * @returns A plain, JSON-serialisable representation.
  */
 export function toPlain(value: unknown): unknown {
-  if (value instanceof Timestamp) return { [FIELD_MARKERS.timestamp]: value.toDate().toISOString() }
+  if (value instanceof Timestamp)
+    return { [FIELD_MARKERS.timestamp]: value.toDate().toISOString() };
   if (value instanceof GeoPoint)
-    return { [FIELD_MARKERS.geopoint]: [value.latitude, value.longitude] }
-  if (value instanceof DocumentReference) return { [FIELD_MARKERS.reference]: value.path }
-  if (value instanceof Buffer) return { [FIELD_MARKERS.bytes]: value.toString('base64') }
-  if (Array.isArray(value)) return value.map(toPlain)
-  if (value && typeof value === 'object') return mapObject(value as Record<string, unknown>)
-  return value
+    return { [FIELD_MARKERS.geopoint]: [value.latitude, value.longitude] };
+  if (value instanceof DocumentReference) return { [FIELD_MARKERS.reference]: value.path };
+  if (value instanceof Buffer) return { [FIELD_MARKERS.bytes]: value.toString('base64') };
+  if (Array.isArray(value)) return value.map(toPlain);
+  if (value && typeof value === 'object') return mapObject(value as Record<string, unknown>);
+  return value;
 }
 
 /**
@@ -29,9 +30,9 @@ export function toPlain(value: unknown): unknown {
  * @returns A new object with converted values.
  */
 function mapObject(obj: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [key, val] of Object.entries(obj)) out[key] = toPlain(val)
-  return out
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj)) out[key] = toPlain(val);
+  return out;
 }
 
 /**
@@ -41,11 +42,11 @@ function mapObject(obj: Record<string, unknown>): Record<string, unknown> {
  * @returns Plain field map ready for the renderer.
  */
 export function toPlainData(data: Record<string, unknown>): Record<string, unknown> {
-  return mapObject(data)
+  return mapObject(data);
 }
 
 /** A detected marker: its kind and the raw inner value. */
-type Marker = { kind: keyof typeof FIELD_MARKERS; value: unknown }
+type Marker = { kind: keyof typeof FIELD_MARKERS; value: unknown };
 
 /**
  * Detect whether a plain object is a single-key type marker.
@@ -54,9 +55,9 @@ type Marker = { kind: keyof typeof FIELD_MARKERS; value: unknown }
  * @returns The marker descriptor, or `null` when it is an ordinary object.
  */
 function readMarker(obj: Record<string, unknown>): Marker | null {
-  const kind = markerKind(obj)
-  if (!kind) return null
-  return { kind, value: obj[FIELD_MARKERS[kind]] }
+  const kind = markerKind(obj);
+  if (!kind) return null;
+  return { kind, value: obj[FIELD_MARKERS[kind]] };
 }
 
 /**
@@ -69,32 +70,32 @@ function readMarker(obj: Record<string, unknown>): Marker | null {
  */
 function reviveMarker(marker: Marker, db: Firestore): unknown {
   if (marker.kind === 'timestamp') {
-    const date = new Date(marker.value as string)
+    const date = new Date(marker.value as string);
     if (Number.isNaN(date.getTime()))
-      throw new Error(`Invalid _timestamp value: ${String(marker.value)}`)
-    return Timestamp.fromDate(date)
+      throw new Error(`Invalid _timestamp value: ${String(marker.value)}`);
+    return Timestamp.fromDate(date);
   }
   if (marker.kind === 'geopoint') {
-    const tuple = marker.value
+    const tuple = marker.value;
     if (
       !Array.isArray(tuple) ||
       tuple.length !== 2 ||
       typeof tuple[0] !== 'number' ||
       typeof tuple[1] !== 'number'
     ) {
-      throw new Error('Invalid _geopoint value: expected [latitude, longitude]')
+      throw new Error('Invalid _geopoint value: expected [latitude, longitude]');
     }
-    return new GeoPoint(tuple[0], tuple[1])
+    return new GeoPoint(tuple[0], tuple[1]);
   }
   if (marker.kind === 'reference') {
     if (typeof marker.value !== 'string' || marker.value.length === 0) {
-      throw new Error('Invalid _ref value: expected a document path string')
+      throw new Error('Invalid _ref value: expected a document path string');
     }
-    return db.doc(marker.value)
+    return db.doc(marker.value);
   }
   if (typeof marker.value !== 'string')
-    throw new Error('Invalid _bytes value: expected a base64 string')
-  return Buffer.from(marker.value, 'base64')
+    throw new Error('Invalid _bytes value: expected a base64 string');
+  return Buffer.from(marker.value, 'base64');
 }
 
 /**
@@ -106,13 +107,13 @@ function reviveMarker(marker: Marker, db: Firestore): unknown {
  * @returns A value ready to write to Firestore.
  */
 export function fromPlain(value: unknown, db: Firestore): unknown {
-  if (Array.isArray(value)) return value.map((item) => fromPlain(item, db))
+  if (Array.isArray(value)) return value.map((item) => fromPlain(item, db));
   if (value && typeof value === 'object') {
-    const marker = readMarker(value as Record<string, unknown>)
-    if (marker) return reviveMarker(marker, db)
-    return unmapObject(value as Record<string, unknown>, db)
+    const marker = readMarker(value as Record<string, unknown>);
+    if (marker) return reviveMarker(marker, db);
+    return unmapObject(value as Record<string, unknown>, db);
   }
-  return value
+  return value;
 }
 
 /**
@@ -123,9 +124,9 @@ export function fromPlain(value: unknown, db: Firestore): unknown {
  * @returns A new object with Firestore-native values.
  */
 function unmapObject(obj: Record<string, unknown>, db: Firestore): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [key, val] of Object.entries(obj)) out[key] = fromPlain(val, db)
-  return out
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj)) out[key] = fromPlain(val, db);
+  return out;
 }
 
 /**
@@ -139,5 +140,5 @@ export function fromPlainData(
   data: Record<string, unknown>,
   db: Firestore
 ): Record<string, unknown> {
-  return unmapObject(data, db)
+  return unmapObject(data, db);
 }

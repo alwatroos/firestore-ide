@@ -1,60 +1,103 @@
-# Firestore IDE
+<h1 align="center">Firestore IDE</h1>
 
-A cross-platform desktop IDE for Google Cloud Firestore, powered by Electron,
-React 19 and TypeScript — with natural-language query generation via Ollama.
+<p align="center">
+  A free, open-source desktop IDE for Google Cloud Firestore.<br/>
+  Browse, edit, and query your data — powered by AI.
+</p>
+
+<p align="center">
+  <a href="https://github.com/alwatroos/firestore-ide/releases/latest">
+    <img alt="Latest release" src="https://img.shields.io/github/v/release/alwatroos/firestore-ide?style=flat-square&color=blue"/>
+  </a>
+  <a href="https://github.com/alwatroos/firestore-ide/blob/main/LICENSE">
+    <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"/>
+  </a>
+  <a href="https://github.com/alwatroos/firestore-ide/actions">
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/alwatroos/firestore-ide/release-regular.yml?style=flat-square&label=CI"/>
+  </a>
+</p>
+
+---
+
+<!-- Replace the placeholder below with an actual screenshot once available. -->
+<!-- ![Firestore IDE screenshot](docs/screenshot.png) -->
+
+## Why Firestore IDE?
+
+Firestore's web console is great for quick lookups, but it struggles with large collections, complex queries, and day-to-day developer workflows. Firestore IDE gives you a native, keyboard-friendly desktop experience with the one extra power-up the console will never have: **just describe what you want in plain English and let the AI write the query**.
 
 ## Features
 
-- 🔌 **Multiple connections** to multiple Firebase/GCP projects, each imported
-  from a service account key and encrypted at rest with the OS keychain.
-- 📚 **Readable browsing** of collections and documents in a table view.
-- ✏️ **Easy editing** of documents as formatted JSON, with create and delete.
-- 🤖 **AI query generation** with Ollama: describe what you want in plain
-  language and the selected model writes a Firestore query, grounded in your
-  database's inferred schema, then runs it.
-- 🔒 **Security-first**: credentials and all Firestore/Ollama access stay in the
-  Electron main process; the renderer only ever sees sanitised data.
+- **Multiple connections** — manage any number of Firebase / GCP projects, each authenticated with a service account key. Keys are encrypted at rest using the OS keychain (Electron `safeStorage`).
+- **Collection browser** — navigate collections and sub-collections in a table view with sortable columns derived from the actual schema.
+- **Document editor** — open any document as formatted JSON, make edits inline, create new documents, or delete them.
+- **AI query generation** — powered by a locally-running [Ollama](https://ollama.com/) model. The AI is grounded in the inferred schema of your connected database, so it generates queries that match your real data shape.
+- **Security-first** — all Firestore and Ollama network calls happen in the Electron main process. The renderer UI never touches your credentials or raw data.
+- **Cross-platform** — runs on macOS, Windows, and Linux.
 
-## Prerequisites
+## Download
+
+Pre-built installers are attached to every [GitHub Release](https://github.com/alwatroos/firestore-ide/releases):
+
+| Platform | Installer |
+| --- | --- |
+| macOS | `.dmg` |
+| Windows | `.exe` |
+| Linux | `.AppImage` |
+
+> **Note:** Builds are currently unsigned. macOS will warn you on first launch — right-click the app and choose **Open** to bypass Gatekeeper.
+
+## Getting started (from source)
+
+### Prerequisites
 
 - Node.js 22+
-- [pnpm](https://pnpm.io/)
-- A running [Ollama](https://ollama.com/) instance (defaults to
-  `http://localhost:11434`, configurable in Settings) with at least one model
-  pulled, e.g. `ollama pull llama3.1`.
-- A Firebase/GCP **service account key** (JSON) for each project.
+- [Corepack](https://nodejs.org/api/corepack.html) (ships with Node.js)
+- A running [Ollama](https://ollama.com/) instance with at least one model pulled, e.g. `ollama pull llama3.1`
+- A Firebase / GCP **service account key** (JSON) for each project you want to connect
 
-## Getting started
-
-This project pins pnpm via the `packageManager` field; enable Corepack once so
-the right version is used automatically:
+### Run in development
 
 ```bash
-corepack enable
+corepack enable        # activates the correct pnpm version
 pnpm install
 pnpm dev
 ```
 
-`pnpm install` also sets up husky git hooks. Commits must follow
-[Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`,
-`chore:`, …) — enforced by a `commit-msg` hook.
+### Build a local installer
 
-Add a connection from the sidebar by selecting your service account JSON file,
-pick a collection to browse documents, click a row to edit it, or use the AI
-panel at the bottom to generate and run a query.
+```bash
+pnpm dist              # outputs an installer into dist/
+```
 
-## Scripts
+## Usage
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Run the app in development. |
-| `pnpm build` | Production build into `out/`. |
-| `pnpm dist` | Build and package installers. |
-| `pnpm typecheck` | Type-check the node and web graphs. |
-| `pnpm test` | Run unit tests. |
+1. **Add a connection** — click the **+** button in the sidebar and select your service account JSON file.
+2. **Browse collections** — pick a collection from the tree; documents appear in the table on the right.
+3. **Edit a document** — click any row to open the JSON editor. Changes are saved back to Firestore on confirm.
+4. **AI query** — open the AI panel at the bottom, type what you're looking for in plain language, and hit **Generate**. The model writes a Firestore query based on your schema and runs it automatically.
 
-See [CLAUDE.md](./CLAUDE.md) for architecture and contribution conventions.
+## Contributing
+
+Contributions are welcome! Please open an issue before starting significant work so we can align on the approach.
+
+```bash
+pnpm typecheck         # type-check both the main and renderer graphs
+pnpm test              # run unit tests
+```
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, …) — enforced by the `commit-msg` git hook.
+
+See [CLAUDE.md](./CLAUDE.md) for a full architecture overview and contribution conventions.
+
+## Support the project
+
+Firestore IDE is and will always be **free and open-source**. If it saves you time and you'd like to support continued development, you can sponsor the project on GitHub:
+
+**[❤️ Sponsor on GitHub](https://github.com/sponsors/alwatroos)**
+
+Every contribution — no matter the size — helps keep the project going. Thank you!
 
 ## License
 
-MIT
+[MIT](./LICENSE) © Karol Płoski

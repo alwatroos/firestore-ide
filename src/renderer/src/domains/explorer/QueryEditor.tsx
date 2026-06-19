@@ -1,25 +1,25 @@
-import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useMemo, useState } from 'react'
-import { Button, Empty, ErrorBanner, WarningList } from '../../components/ui'
-import { api, unwrap } from '../../lib/api'
-import { parseJsonObject } from '../../lib/json'
-import { useAsync } from '../../lib/useAsync'
-import { activeConnectionAtom } from '../connections/atoms'
-import { useReadOnly } from '../connections/hooks'
-import { selectedDocumentAtom } from '../documents/atoms'
-import { useOpenDocument } from '../documents/hooks'
-import { useQueryHistory } from '../queries/hooks'
-import { queryDraftAtom, queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms'
-import { CellValue } from './CellValue'
-import { collectColumns } from './columns'
-import { estimateReads } from './cost'
-import { useQueryRunner } from './hooks'
-import { IndexHint } from './IndexHint'
-import { isMissingIndexError } from './indexes'
-import { toQuerySpec } from './querySpec'
-import { queryWarnings } from './queryWarnings'
-import { useTransfer } from './useTransfer'
+import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { type ReactNode, useMemo, useState } from 'react';
+import { Button, Empty, ErrorBanner, WarningList } from '../../components/ui';
+import { api, unwrap } from '../../lib/api';
+import { parseJsonObject } from '../../lib/json';
+import { useAsync } from '../../lib/useAsync';
+import { activeConnectionAtom } from '../connections/atoms';
+import { useReadOnly } from '../connections/hooks';
+import { selectedDocumentAtom } from '../documents/atoms';
+import { useOpenDocument } from '../documents/hooks';
+import { useQueryHistory } from '../queries/hooks';
+import { queryDraftAtom, queryModeAtom, queryResultsAtom, selectedCollectionAtom } from './atoms';
+import { CellValue } from './CellValue';
+import { collectColumns } from './columns';
+import { estimateReads } from './cost';
+import { useQueryRunner } from './hooks';
+import { IndexHint } from './IndexHint';
+import { isMissingIndexError } from './indexes';
+import { toQuerySpec } from './querySpec';
+import { queryWarnings } from './queryWarnings';
+import { useTransfer } from './useTransfer';
 
 const JSON_PLACEHOLDER = JSON.stringify(
   {
@@ -30,7 +30,7 @@ const JSON_PLACEHOLDER = JSON.stringify(
   },
   null,
   2
-)
+);
 
 const JS_PLACEHOLDER = `// Available: db (Firestore Admin SDK), FieldValue, Timestamp
 // Must return: Array<{ id: string, path: string, data: Record<string, unknown> }>
@@ -41,15 +41,15 @@ const snap = await db.collection('users')
   .limit(50)
   .get()
 
-return snap.docs.map(d => ({ id: d.id, path: d.ref.path, data: d.data() }))`
+return snap.docs.map(d => ({ id: d.id, path: d.ref.path, data: d.data() }))`;
 
 /** Props for {@link QueryToolbar}. */
 interface ToolbarProps {
-  mode: 'json' | 'js'
-  onModeChange: (m: 'json' | 'js') => void
-  onRun: () => void
-  busy: boolean
-  disabled: boolean
+  mode: 'json' | 'js';
+  onModeChange: (m: 'json' | 'js') => void;
+  onRun: () => void;
+  busy: boolean;
+  disabled: boolean;
 }
 
 /**
@@ -84,15 +84,15 @@ function QueryToolbar({ mode, onModeChange, onRun, busy, disabled }: ToolbarProp
         {busy ? 'Running…' : 'Run'}
       </Button>
     </div>
-  )
+  );
 }
 
 /** Props for {@link ResultRow}. */
 interface ResultRowProps {
-  doc: DocumentRecord
-  columns: string[]
-  onSelect: (doc: DocumentRecord) => void
-  onOpenRef: (path: string) => void
+  doc: DocumentRecord;
+  columns: string[];
+  onSelect: (doc: DocumentRecord) => void;
+  onOpenRef: (path: string) => void;
 }
 
 /**
@@ -114,7 +114,7 @@ function ResultRow({ doc, columns, onSelect, onOpenRef }: ResultRowProps): React
         </td>
       ))}
     </tr>
-  )
+  );
 }
 
 /**
@@ -124,17 +124,17 @@ function ResultRow({ doc, columns, onSelect, onOpenRef }: ResultRowProps): React
  * @returns The rendered results section.
  */
 function QueryResultsTable(): ReactNode {
-  const results = useAtomValue(queryResultsAtom)
-  const setDocument = useSetAtom(selectedDocumentAtom)
-  const active = useAtomValue(activeConnectionAtom)
-  const { open: openRef } = useOpenDocument(active?.id ?? null)
-  const { exportRecords, busy: exportBusy } = useTransfer(active?.id ?? null)
+  const results = useAtomValue(queryResultsAtom);
+  const setDocument = useSetAtom(selectedDocumentAtom);
+  const active = useAtomValue(activeConnectionAtom);
+  const { open: openRef } = useOpenDocument(active?.id ?? null);
+  const { exportRecords, busy: exportBusy } = useTransfer(active?.id ?? null);
 
-  if (results.length === 0) return <Empty text="Run a query to see results" />
+  if (results.length === 0) return <Empty text="Run a query to see results" />;
 
-  const isSentinel = results.length === 1 && results[0].id === COUNT_SENTINEL_ID
+  const isSentinel = results.length === 1 && results[0].id === COUNT_SENTINEL_ID;
   if (isSentinel) {
-    const entries = Object.entries(results[0].data)
+    const entries = Object.entries(results[0].data);
     return (
       <div className="flex flex-wrap items-center justify-center gap-6 p-8">
         {entries.map(([key, value]) => (
@@ -149,10 +149,10 @@ function QueryResultsTable(): ReactNode {
           </div>
         ))}
       </div>
-    )
+    );
   }
 
-  const columns = collectColumns(results)
+  const columns = collectColumns(results);
   return (
     <div className="overflow-auto">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 py-1.5 text-xs text-slate-400 dark:text-slate-500">
@@ -200,7 +200,7 @@ function QueryResultsTable(): ReactNode {
         </tbody>
       </table>
     </div>
-  )
+  );
 }
 
 /**
@@ -220,22 +220,22 @@ async function executeJsonQuery(
   runSpec: ReturnType<typeof useQueryRunner>['runSpec'],
   setParseError: (msg: string | null) => void
 ): Promise<number | null> {
-  setParseError(null)
-  const parsed = parseJsonObject(queryText)
+  setParseError(null);
+  const parsed = parseJsonObject(queryText);
   if (!parsed.ok) {
-    setParseError(parsed.error)
-    return null
+    setParseError(parsed.error);
+    return null;
   }
   try {
-    const spec = toQuerySpec(parsed.value)
-    if (collectionGroup) spec.collectionGroup = true
-    setLastSpec(spec)
-    setCollection(spec.collectionPath)
-    const docs = await runSpec(spec)
-    return docs?.length ?? 0
+    const spec = toQuerySpec(parsed.value);
+    if (collectionGroup) spec.collectionGroup = true;
+    setLastSpec(spec);
+    setCollection(spec.collectionPath);
+    const docs = await runSpec(spec);
+    return docs?.length ?? 0;
   } catch (e) {
-    setParseError(e instanceof Error ? e.message : 'Invalid query spec')
-    return null
+    setParseError(e instanceof Error ? e.message : 'Invalid query spec');
+    return null;
   }
 }
 
@@ -245,40 +245,40 @@ async function executeJsonQuery(
  * @returns The rendered query editor.
  */
 export function QueryEditor(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const readOnly = useReadOnly()
-  const setCollection = useSetAtom(selectedCollectionAtom)
-  const setResults = useSetAtom(queryResultsAtom)
+  const active = useAtomValue(activeConnectionAtom);
+  const readOnly = useReadOnly();
+  const setCollection = useSetAtom(selectedCollectionAtom);
+  const setResults = useSetAtom(queryResultsAtom);
   const {
     runSpec,
     error: jsonError,
     busy: jsonBusy,
-  } = useQueryRunner(active?.id ?? null, queryResultsAtom)
-  const { error: jsError, busy: jsBusy, run: runJs } = useAsync()
-  const { record } = useQueryHistory()
-  const [mode, setMode] = useAtom(queryModeAtom)
-  const [queryText, setQueryText] = useAtom(queryDraftAtom)
-  const [collectionGroup, setCollectionGroup] = useState(false)
-  const [lastSpec, setLastSpec] = useState<QuerySpec | null>(null)
-  const [parseError, setParseError] = useState<string | null>(null)
+  } = useQueryRunner(active?.id ?? null, queryResultsAtom);
+  const { error: jsError, busy: jsBusy, run: runJs } = useAsync();
+  const { record } = useQueryHistory();
+  const [mode, setMode] = useAtom(queryModeAtom);
+  const [queryText, setQueryText] = useAtom(queryDraftAtom);
+  const [collectionGroup, setCollectionGroup] = useState(false);
+  const [lastSpec, setLastSpec] = useState<QuerySpec | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
 
-  const busy = mode === 'json' ? jsonBusy : jsBusy
-  const apiError = mode === 'json' ? jsonError : jsError
+  const busy = mode === 'json' ? jsonBusy : jsBusy;
+  const apiError = mode === 'json' ? jsonError : jsError;
 
   // Best-effort, non-blocking cost/efficiency hints for the JSON spec being typed.
   const warnings = useMemo(() => {
-    if (mode !== 'json' || !queryText.trim()) return []
-    const parsed = parseJsonObject(queryText)
-    if (!parsed.ok) return []
+    if (mode !== 'json' || !queryText.trim()) return [];
+    const parsed = parseJsonObject(queryText);
+    if (!parsed.ok) return [];
     try {
-      return queryWarnings(toQuerySpec(parsed.value))
+      return queryWarnings(toQuerySpec(parsed.value));
     } catch {
-      return []
+      return [];
     }
-  }, [mode, queryText])
+  }, [mode, queryText]);
 
   // JS snippets can write, so they are blocked while read-only.
-  const runDisabled = !queryText.trim() || !active || (mode === 'js' && readOnly)
+  const runDisabled = !queryText.trim() || !active || (mode === 'js' && readOnly);
 
   async function handleRun(): Promise<void> {
     if (mode === 'json') {
@@ -289,25 +289,30 @@ export function QueryEditor(): ReactNode {
         setLastSpec,
         runSpec,
         setParseError
-      )
+      );
       if (count !== null && active) {
-        void record({ connectionId: active.id, kind: 'json', query: queryText, resultCount: count })
+        void record({
+          connectionId: active.id,
+          kind: 'json',
+          query: queryText,
+          resultCount: count,
+        });
       }
-      return
+      return;
     }
-    setParseError(null)
-    if (!active) return setParseError('No active connection')
+    setParseError(null);
+    if (!active) return setParseError('No active connection');
     const results = await runJs(async () => {
-      const r = await unwrap(api.runJsQuery(active.id, queryText))
-      setResults(r)
-      return r
-    })
+      const r = await unwrap(api.runJsQuery(active.id, queryText));
+      setResults(r);
+      return r;
+    });
     void record({
       connectionId: active.id,
       kind: 'js',
       query: queryText,
       resultCount: results?.length,
-    })
+    });
   }
 
   return (
@@ -315,8 +320,8 @@ export function QueryEditor(): ReactNode {
       <QueryToolbar
         mode={mode}
         onModeChange={(m) => {
-          setMode(m)
-          setParseError(null)
+          setMode(m);
+          setParseError(null);
         }}
         onRun={() => void handleRun()}
         busy={busy}
@@ -355,5 +360,5 @@ export function QueryEditor(): ReactNode {
         <QueryResultsTable />
       </div>
     </div>
-  )
+  );
 }

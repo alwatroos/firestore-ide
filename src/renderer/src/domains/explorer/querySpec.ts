@@ -1,4 +1,4 @@
-import type { QueryAggregate, QueryFilter, QueryOrder, QuerySpec } from '@shared/types/firestore'
+import type { QueryAggregate, QueryFilter, QueryOrder, QuerySpec } from '@shared/types/firestore';
 
 /**
  * Coerce a parsed JSON object into a {@link QuerySpec}, validating required fields.
@@ -9,13 +9,13 @@ import type { QueryAggregate, QueryFilter, QueryOrder, QuerySpec } from '@shared
  */
 export function toQuerySpec(json: Record<string, unknown>): QuerySpec {
   if (!json.collectionPath || typeof json.collectionPath !== 'string') {
-    throw new Error('collectionPath (string) is required')
+    throw new Error('collectionPath (string) is required');
   }
-  const validAggregates: QueryAggregate[] = ['count', 'sum', 'avg']
+  const validAggregates: QueryAggregate[] = ['count', 'sum', 'avg'];
   const aggregate =
     json.aggregate && validAggregates.includes(json.aggregate as QueryAggregate)
       ? (json.aggregate as QueryAggregate)
-      : undefined
+      : undefined;
   return {
     collectionPath: json.collectionPath,
     ...(json.collectionGroup === true ? { collectionGroup: true } : {}),
@@ -24,5 +24,5 @@ export function toQuerySpec(json: Record<string, unknown>): QuerySpec {
     limit: typeof json.limit === 'number' ? json.limit : undefined,
     ...(aggregate ? { aggregate } : {}),
     ...(typeof json.aggregateField === 'string' ? { aggregateField: json.aggregateField } : {}),
-  }
+  };
 }

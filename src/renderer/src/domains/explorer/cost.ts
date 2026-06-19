@@ -1,17 +1,17 @@
-import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore'
+import { COUNT_SENTINEL_ID, type DocumentRecord } from '@shared/types/firestore';
 
 /** Running tally of estimated Firestore operations for the current session. */
 export interface CostTotals {
   /** Estimated document reads. */
-  reads: number
+  reads: number;
   /** Document writes (creates/updates). */
-  writes: number
+  writes: number;
   /** Document deletes. */
-  deletes: number
+  deletes: number;
 }
 
 /** A zeroed cost tally. */
-export const ZERO_COST: CostTotals = { reads: 0, writes: 0, deletes: 0 }
+export const ZERO_COST: CostTotals = { reads: 0, writes: 0, deletes: 0 };
 
 /**
  * Estimate the document reads billed for a query result. Firestore bills one
@@ -22,8 +22,8 @@ export const ZERO_COST: CostTotals = { reads: 0, writes: 0, deletes: 0 }
  * @returns The estimated number of reads.
  */
 export function estimateReads(results: DocumentRecord[]): number {
-  if (results.length === 1 && results[0].id === COUNT_SENTINEL_ID) return 1
-  return Math.max(1, results.length)
+  if (results.length === 1 && results[0].id === COUNT_SENTINEL_ID) return 1;
+  return Math.max(1, results.length);
 }
 
 /**
@@ -38,5 +38,5 @@ export function addCost(totals: CostTotals, delta: Partial<CostTotals>): CostTot
     reads: totals.reads + (delta.reads ?? 0),
     writes: totals.writes + (delta.writes ?? 0),
     deletes: totals.deletes + (delta.deletes ?? 0),
-  }
+  };
 }

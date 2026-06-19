@@ -1,4 +1,4 @@
-import { getDb } from './clientManager'
+import { getDb } from './clientManager';
 
 /**
  * Verify a connection can reach Firestore by issuing a lightweight read.
@@ -7,7 +7,7 @@ import { getDb } from './clientManager'
  * @returns `true` when Firestore responds successfully.
  */
 export async function testConnection(connectionId: string): Promise<boolean> {
-  const db = await getDb(connectionId)
-  await db.listCollections()
-  return true
+  const db = await getDb(connectionId);
+  await db.listCollections();
+  return true;
 }

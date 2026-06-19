@@ -1,14 +1,14 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto';
 import type {
   QueryHistoryEntry,
   RecordQueryInput,
   SavedQuery,
   SaveQueryInput,
-} from '@shared/types/queries'
-import { loadQueries, persistQueries } from './store'
+} from '@shared/types/queries';
+import { loadQueries, persistQueries } from './store';
 
 /** Maximum number of history entries retained. */
-const HISTORY_LIMIT = 100
+const HISTORY_LIMIT = 100;
 
 /**
  * Record a query execution at the head of the history, trimming to the cap.
@@ -17,15 +17,15 @@ const HISTORY_LIMIT = 100
  * @returns The created history entry.
  */
 export async function recordQuery(input: RecordQueryInput): Promise<QueryHistoryEntry> {
-  const store = await loadQueries()
+  const store = await loadQueries();
   const entry: QueryHistoryEntry = {
     id: randomUUID(),
     createdAt: new Date().toISOString(),
     ...input,
-  }
-  store.history = [entry, ...store.history].slice(0, HISTORY_LIMIT)
-  await persistQueries(store)
-  return entry
+  };
+  store.history = [entry, ...store.history].slice(0, HISTORY_LIMIT);
+  await persistQueries(store);
+  return entry;
 }
 
 /**
@@ -34,7 +34,7 @@ export async function recordQuery(input: RecordQueryInput): Promise<QueryHistory
  * @returns The history entries.
  */
 export async function listHistory(): Promise<QueryHistoryEntry[]> {
-  return (await loadQueries()).history
+  return (await loadQueries()).history;
 }
 
 /**
@@ -44,11 +44,11 @@ export async function listHistory(): Promise<QueryHistoryEntry[]> {
  * @returns The created saved query.
  */
 export async function saveQuery(input: SaveQueryInput): Promise<SavedQuery> {
-  const store = await loadQueries()
-  const saved: SavedQuery = { id: randomUUID(), createdAt: new Date().toISOString(), ...input }
-  store.saved = [saved, ...store.saved]
-  await persistQueries(store)
-  return saved
+  const store = await loadQueries();
+  const saved: SavedQuery = { id: randomUUID(), createdAt: new Date().toISOString(), ...input };
+  store.saved = [saved, ...store.saved];
+  await persistQueries(store);
+  return saved;
 }
 
 /**
@@ -57,7 +57,7 @@ export async function saveQuery(input: SaveQueryInput): Promise<SavedQuery> {
  * @returns The saved queries.
  */
 export async function listSaved(): Promise<SavedQuery[]> {
-  return (await loadQueries()).saved
+  return (await loadQueries()).saved;
 }
 
 /**
@@ -67,7 +67,7 @@ export async function listSaved(): Promise<SavedQuery[]> {
  * @returns Resolves once removed.
  */
 export async function deleteSaved(id: string): Promise<void> {
-  const store = await loadQueries()
-  store.saved = store.saved.filter((query) => query.id !== id)
-  await persistQueries(store)
+  const store = await loadQueries();
+  store.saved = store.saved.filter((query) => query.id !== id);
+  await persistQueries(store);
 }

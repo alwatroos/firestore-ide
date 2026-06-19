@@ -1,4 +1,4 @@
-import { safeStorage } from 'electron'
+import { safeStorage } from 'electron';
 
 /**
  * Encrypt a plaintext secret using the OS keychain-backed `safeStorage`.
@@ -9,9 +9,9 @@ import { safeStorage } from 'electron'
  */
 export function encryptSecret(plaintext: string): string {
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('Secure storage is unavailable on this system')
+    throw new Error('Secure storage is unavailable on this system');
   }
-  return safeStorage.encryptString(plaintext).toString('base64')
+  return safeStorage.encryptString(plaintext).toString('base64');
 }
 
 /**
@@ -21,5 +21,5 @@ export function encryptSecret(plaintext: string): string {
  * @returns The recovered plaintext secret.
  */
 export function decryptSecret(ciphertext: string): string {
-  return safeStorage.decryptString(Buffer.from(ciphertext, 'base64'))
+  return safeStorage.decryptString(Buffer.from(ciphertext, 'base64'));
 }

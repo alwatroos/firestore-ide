@@ -1,13 +1,13 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto';
 import type {
   ConnectionMeta,
   ConnectionPatch,
   NewConnectionInput,
   StoredConnection,
-} from '@shared/types/connection'
-import { decryptSecret, encryptSecret } from './crypto'
-import { parseServiceAccount, type ServiceAccount, toMeta } from './serialize'
-import { loadConnections, persistConnections, requireConnection } from './store'
+} from '@shared/types/connection';
+import { decryptSecret, encryptSecret } from './crypto';
+import { parseServiceAccount, type ServiceAccount, toMeta } from './serialize';
+import { loadConnections, persistConnections, requireConnection } from './store';
 
 /**
  * List all connections as renderer-safe metadata.
@@ -15,7 +15,7 @@ import { loadConnections, persistConnections, requireConnection } from './store'
  * @returns Secret-free metadata for every stored connection.
  */
 export async function listConnections(): Promise<ConnectionMeta[]> {
-  return (await loadConnections()).map(toMeta)
+  return (await loadConnections()).map(toMeta);
 }
 
 /**
@@ -25,10 +25,10 @@ export async function listConnections(): Promise<ConnectionMeta[]> {
  * @returns The created connection's secret-free metadata.
  */
 export async function addConnection(input: NewConnectionInput): Promise<ConnectionMeta> {
-  const account = parseServiceAccount(input.serviceAccountJson)
-  const record = buildRecord(input.name, account, input.serviceAccountJson)
-  await persistConnections([...(await loadConnections()), record])
-  return toMeta(record)
+  const account = parseServiceAccount(input.serviceAccountJson);
+  const record = buildRecord(input.name, account, input.serviceAccountJson);
+  await persistConnections([...(await loadConnections()), record]);
+  return toMeta(record);
 }
 
 /**
@@ -44,18 +44,18 @@ export async function updateConnection(
   id: string,
   patch: ConnectionPatch
 ): Promise<ConnectionMeta> {
-  const connections = await loadConnections()
-  const index = connections.findIndex((c) => c.id === id)
-  if (index === -1) throw new Error(`Connection not found: ${id}`)
-  const current = connections[index]
+  const connections = await loadConnections();
+  const index = connections.findIndex((c) => c.id === id);
+  if (index === -1) throw new Error(`Connection not found: ${id}`);
+  const current = connections[index];
   const updated: StoredConnection = {
     ...current,
     ...(patch.name !== undefined ? { name: patch.name } : {}),
     ...(patch.readOnly !== undefined ? { readOnly: patch.readOnly } : {}),
-  }
-  connections[index] = updated
-  await persistConnections(connections)
-  return toMeta(updated)
+  };
+  connections[index] = updated;
+  await persistConnections(connections);
+  return toMeta(updated);
 }
 
 /**
@@ -65,8 +65,8 @@ export async function updateConnection(
  * @returns Resolves once the connection has been removed.
  */
 export async function removeConnection(id: string): Promise<void> {
-  const remaining = (await loadConnections()).filter((c) => c.id !== id)
-  await persistConnections(remaining)
+  const remaining = (await loadConnections()).filter((c) => c.id !== id);
+  await persistConnections(remaining);
 }
 
 /**
@@ -76,8 +76,8 @@ export async function removeConnection(id: string): Promise<void> {
  * @returns The decrypted, parsed service account.
  */
 export async function getCredentials(id: string): Promise<ServiceAccount> {
-  const stored = await requireConnection(id)
-  return parseServiceAccount(decryptSecret(stored.encryptedCredentials))
+  const stored = await requireConnection(id);
+  return parseServiceAccount(decryptSecret(stored.encryptedCredentials));
 }
 
 /**
@@ -96,5 +96,5 @@ function buildRecord(name: string, account: ServiceAccount, rawJson: string): St
     clientEmail: account.client_email,
     createdAt: new Date().toISOString(),
     encryptedCredentials: encryptSecret(rawJson),
-  }
+  };
 }

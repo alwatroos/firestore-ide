@@ -3,14 +3,14 @@ import type {
   CollectionBackup,
   ImportDoc,
   ImportMode,
-} from '@shared/types/transfer'
-import type { CollectionReference, Firestore } from 'firebase-admin/firestore'
-import { getDb } from './clientManager'
-import { assertWritable } from './guard'
-import { fromPlainData, toPlainData } from './mapper'
+} from '@shared/types/transfer';
+import type { CollectionReference, Firestore } from 'firebase-admin/firestore';
+import { getDb } from './clientManager';
+import { assertWritable } from './guard';
+import { fromPlainData, toPlainData } from './mapper';
 
 /** Maximum operations per Firestore batched write. */
-const BATCH_LIMIT = 500
+const BATCH_LIMIT = 500;
 
 /**
  * Import documents into a collection in batched writes.
@@ -28,19 +28,19 @@ export async function importDocuments(
   docs: ImportDoc[],
   mode: ImportMode
 ): Promise<number> {
-  await assertWritable(connectionId)
-  const db = await getDb(connectionId)
-  const collection = db.collection(collectionPath)
-  const merge = mode === 'merge'
+  await assertWritable(connectionId);
+  const db = await getDb(connectionId);
+  const collection = db.collection(collectionPath);
+  const merge = mode === 'merge';
   for (let start = 0; start < docs.length; start += BATCH_LIMIT) {
-    const batch = db.batch()
+    const batch = db.batch();
     for (const doc of docs.slice(start, start + BATCH_LIMIT)) {
-      const ref = doc.id ? collection.doc(doc.id) : collection.doc()
-      batch.set(ref, fromPlainData(doc.data, db), { merge })
+      const ref = doc.id ? collection.doc(doc.id) : collection.doc();
+      batch.set(ref, fromPlainData(doc.data, db), { merge });
     }
-    await batch.commit()
+    await batch.commit();
   }
-  return docs.length
+  return docs.length;
 }
 
 /**
@@ -54,8 +54,8 @@ export async function readCollectionTree(
   connectionId: string,
   collectionPath: string
 ): Promise<CollectionBackup> {
-  const db = await getDb(connectionId)
-  return readCollection(db, db.collection(collectionPath), collectionPath)
+  const db = await getDb(connectionId);
+  return readCollection(db, db.collection(collectionPath), collectionPath);
 }
 
 /**
@@ -71,16 +71,16 @@ async function readCollection(
   collection: CollectionReference,
   path: string
 ): Promise<CollectionBackup> {
-  const snap = await collection.get()
-  const documents: BackupDocument[] = []
+  const snap = await collection.get();
+  const documents: BackupDocument[] = [];
   for (const doc of snap.docs) {
-    const subRefs = await doc.ref.listCollections()
+    const subRefs = await doc.ref.listCollections();
     const subcollections = await Promise.all(
       subRefs.map((sub) => readCollection(db, sub, sub.path))
-    )
-    documents.push({ id: doc.id, data: toPlainData(doc.data()), subcollections })
+    );
+    documents.push({ id: doc.id, data: toPlainData(doc.data()), subcollections });
   }
-  return { path, documents }
+  return { path, documents };
 }
 
 /**
@@ -98,9 +98,9 @@ export async function restoreCollectionTree(
   backup: CollectionBackup,
   mode: ImportMode
 ): Promise<number> {
-  await assertWritable(connectionId)
-  const db = await getDb(connectionId)
-  return writeCollection(db, backup, mode)
+  await assertWritable(connectionId);
+  const db = await getDb(connectionId);
+  return writeCollection(db, backup, mode);
 }
 
 /**
@@ -116,13 +116,13 @@ async function writeCollection(
   backup: CollectionBackup,
   mode: ImportMode
 ): Promise<number> {
-  const collection = db.collection(backup.path)
-  const merge = mode === 'merge'
-  let written = 0
+  const collection = db.collection(backup.path);
+  const merge = mode === 'merge';
+  let written = 0;
   for (const doc of backup.documents) {
-    await collection.doc(doc.id).set(fromPlainData(doc.data, db), { merge })
-    written += 1
-    for (const sub of doc.subcollections) written += await writeCollection(db, sub, mode)
+    await collection.doc(doc.id).set(fromPlainData(doc.data, db), { merge });
+    written += 1;
+    for (const sub of doc.subcollections) written += await writeCollection(db, sub, mode);
   }
-  return written
+  return written;
 }

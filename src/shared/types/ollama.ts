@@ -1,25 +1,25 @@
 /** A model advertised by an Ollama host. */
 export interface OllamaModel {
   /** Model name/tag, e.g. `llama3.1:8b`. */
-  name: string
+  name: string;
   /** Approximate on-disk size in bytes, when reported. */
-  size?: number
+  size?: number;
 }
 
 /** Request to generate a Firestore query from a natural-language instruction. */
 export interface GenerateQueryInput {
   /** Connection whose schema provides grounding context. */
-  connectionId: string
+  connectionId: string;
   /** Ollama model to use. */
-  model: string
+  model: string;
   /** Natural-language description of the desired query. */
-  instruction: string
+  instruction: string;
 }
 
 /** Result of an AI query-generation request. */
 export interface GeneratedQuery {
   /** Generated, ready-to-run query specification (JSON string). */
-  raw: string
+  raw: string;
   /** Model that produced the answer. */
-  model: string
+  model: string;
 }

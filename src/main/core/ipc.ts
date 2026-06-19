@@ -1,6 +1,6 @@
-import type { Result } from '@shared/types/result'
-import { err, toMessage } from '@shared/utils/result'
-import { ipcMain } from 'electron'
+import type { Result } from '@shared/types/result';
+import { err, toMessage } from '@shared/utils/result';
+import { ipcMain } from 'electron';
 
 /**
  * Register an IPC handler whose result is always wrapped in a {@link Result},
@@ -18,9 +18,9 @@ export function handle<A extends unknown[], R>(
 ): void {
   ipcMain.handle(channel, async (_event, ...args) => {
     try {
-      return await handler(...(args as A))
+      return await handler(...(args as A));
     } catch (error) {
-      return err(toMessage(error))
+      return err(toMessage(error));
     }
-  })
+  });
 }

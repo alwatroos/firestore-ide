@@ -1,4 +1,4 @@
-import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore'
+import { COUNT_SENTINEL_ID, type DocumentRecord, type QuerySpec } from '@shared/types/firestore';
 import {
   AggregateField,
   FieldValue,
@@ -6,11 +6,11 @@ import {
   type Query,
   type QueryDocumentSnapshot,
   Timestamp,
-} from 'firebase-admin/firestore'
-import { getDb } from './clientManager'
-import { assertWritable } from './guard'
-import { fromPlainData, toPlainData } from './mapper'
-import { applyFiltersOnly, applySpec, clampLimit } from './queryBuilder'
+} from 'firebase-admin/firestore';
+import { getDb } from './clientManager';
+import { assertWritable } from './guard';
+import { fromPlainData, toPlainData } from './mapper';
+import { applyFiltersOnly, applySpec, clampLimit } from './queryBuilder';
 
 /**
  * Validate that a path points at a document (even segment count), not a collection.
@@ -19,9 +19,9 @@ import { applyFiltersOnly, applySpec, clampLimit } from './queryBuilder'
  * @throws If the path does not address a document.
  */
 function assertDocumentPath(path: string): void {
-  const segments = path.split('/').filter(Boolean)
+  const segments = path.split('/').filter(Boolean);
   if (segments.length === 0 || segments.length % 2 !== 0) {
-    throw new Error(`Not a document path: ${path}`)
+    throw new Error(`Not a document path: ${path}`);
   }
 }
 
@@ -32,7 +32,7 @@ function assertDocumentPath(path: string): void {
  * @returns The flattened document record.
  */
 function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
-  return { id: doc.id, path: doc.ref.path, data: toPlainData(doc.data()) }
+  return { id: doc.id, path: doc.ref.path, data: toPlainData(doc.data()) };
 }
 
 /**
@@ -45,11 +45,11 @@ function toRecord(doc: QueryDocumentSnapshot): DocumentRecord {
  * @throws If a collection group id is given as a multi-segment path.
  */
 function baseQuery(db: Firestore, spec: QuerySpec): Query {
-  if (!spec.collectionGroup) return db.collection(spec.collectionPath)
+  if (!spec.collectionGroup) return db.collection(spec.collectionPath);
   if (spec.collectionPath.includes('/')) {
-    throw new Error('Collection group queries take a collection id, not a path')
+    throw new Error('Collection group queries take a collection id, not a path');
   }
-  return db.collectionGroup(spec.collectionPath)
+  return db.collectionGroup(spec.collectionPath);
 }
 
 /**
@@ -60,10 +60,10 @@ function baseQuery(db: Firestore, spec: QuerySpec): Query {
  * @returns An array containing one record with `{ count: N }` as its data.
  */
 async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
-  const db = await getDb(connectionId)
-  const base = applyFiltersOnly(baseQuery(db, spec), spec)
-  const snap = await base.count().get()
-  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: snap.data().count } }]
+  const db = await getDb(connectionId);
+  const base = applyFiltersOnly(baseQuery(db, spec), spec);
+  const snap = await base.count().get();
+  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { count: snap.data().count } }];
 }
 
 /**
@@ -74,11 +74,11 @@ async function runCountQuery(connectionId: string, spec: QuerySpec): Promise<Doc
  * @returns An array containing one record with `{ sum: N }` as its data.
  */
 async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
-  if (!spec.aggregateField) throw new Error('aggregateField is required for sum aggregation')
-  const db = await getDb(connectionId)
-  const base = applyFiltersOnly(baseQuery(db, spec), spec)
-  const snap = await base.aggregate({ result: AggregateField.sum(spec.aggregateField) }).get()
-  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { sum: snap.data().result } }]
+  if (!spec.aggregateField) throw new Error('aggregateField is required for sum aggregation');
+  const db = await getDb(connectionId);
+  const base = applyFiltersOnly(baseQuery(db, spec), spec);
+  const snap = await base.aggregate({ result: AggregateField.sum(spec.aggregateField) }).get();
+  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { sum: snap.data().result } }];
 }
 
 /**
@@ -89,11 +89,11 @@ async function runSumQuery(connectionId: string, spec: QuerySpec): Promise<Docum
  * @returns An array containing one record with `{ avg: N }` as its data.
  */
 async function runAvgQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
-  if (!spec.aggregateField) throw new Error('aggregateField is required for avg aggregation')
-  const db = await getDb(connectionId)
-  const base = applyFiltersOnly(baseQuery(db, spec), spec)
-  const snap = await base.aggregate({ result: AggregateField.average(spec.aggregateField) }).get()
-  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { avg: snap.data().result } }]
+  if (!spec.aggregateField) throw new Error('aggregateField is required for avg aggregation');
+  const db = await getDb(connectionId);
+  const base = applyFiltersOnly(baseQuery(db, spec), spec);
+  const snap = await base.aggregate({ result: AggregateField.average(spec.aggregateField) }).get();
+  return [{ id: COUNT_SENTINEL_ID, path: COUNT_SENTINEL_ID, data: { avg: snap.data().result } }];
 }
 
 /**
@@ -107,8 +107,8 @@ async function runAvgQuery(connectionId: string, spec: QuerySpec): Promise<Docum
  */
 export async function runJsQuery(connectionId: string, code: string): Promise<DocumentRecord[]> {
   // JS snippets can perform writes, so block them entirely while read-only.
-  await assertWritable(connectionId)
-  const db = await getDb(connectionId)
+  await assertWritable(connectionId);
+  const db = await getDb(connectionId);
   // Intentional use of Function constructor — this is a user REPL in a local desktop app.
   // eslint-disable-next-line no-new-func
   const fn = new Function(
@@ -116,15 +116,15 @@ export async function runJsQuery(connectionId: string, code: string): Promise<Do
     'FieldValue',
     'Timestamp',
     `return (async () => {\n${code}\n})()`
-  ) as (db: unknown, fv: unknown, ts: unknown) => Promise<unknown>
+  ) as (db: unknown, fv: unknown, ts: unknown) => Promise<unknown>;
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error('JS query timed out after 10 seconds')), 10_000)
-  )
-  const result = await Promise.race([fn(db, FieldValue, Timestamp), timeout])
+  );
+  const result = await Promise.race([fn(db, FieldValue, Timestamp), timeout]);
   if (!Array.isArray(result)) {
-    throw new Error('JS query must return an array of {id, path, data} objects')
+    throw new Error('JS query must return an array of {id, path, data} objects');
   }
-  return result as DocumentRecord[]
+  return result as DocumentRecord[];
 }
 
 /**
@@ -138,9 +138,9 @@ export async function listCollections(
   connectionId: string,
   parentPath?: string
 ): Promise<string[]> {
-  const db = await getDb(connectionId)
-  const refs = parentPath ? await db.doc(parentPath).listCollections() : await db.listCollections()
-  return refs.map((ref) => ref.id)
+  const db = await getDb(connectionId);
+  const refs = parentPath ? await db.doc(parentPath).listCollections() : await db.listCollections();
+  return refs.map((ref) => ref.id);
 }
 
 /**
@@ -158,11 +158,11 @@ export async function listDocuments(
   limit?: number,
   offset?: number
 ): Promise<DocumentRecord[]> {
-  const db = await getDb(connectionId)
-  let q = db.collection(collectionPath).limit(clampLimit(limit))
-  if (offset && offset > 0) q = q.offset(offset)
-  const snap = await q.get()
-  return snap.docs.map(toRecord)
+  const db = await getDb(connectionId);
+  let q = db.collection(collectionPath).limit(clampLimit(limit));
+  if (offset && offset > 0) q = q.offset(offset);
+  const snap = await q.get();
+  return snap.docs.map(toRecord);
 }
 
 /**
@@ -176,11 +176,11 @@ export async function getDocument(
   connectionId: string,
   path: string
 ): Promise<DocumentRecord | null> {
-  assertDocumentPath(path)
-  const db = await getDb(connectionId)
-  const snap = await db.doc(path).get()
-  if (!snap.exists) return null
-  return { id: snap.id, path: snap.ref.path, data: toPlainData(snap.data() ?? {}) }
+  assertDocumentPath(path);
+  const db = await getDb(connectionId);
+  const snap = await db.doc(path).get();
+  if (!snap.exists) return null;
+  return { id: snap.id, path: snap.ref.path, data: toPlainData(snap.data() ?? {}) };
 }
 
 /**
@@ -192,12 +192,12 @@ export async function getDocument(
  * @returns Matching documents as records, or a count record.
  */
 export async function runQuery(connectionId: string, spec: QuerySpec): Promise<DocumentRecord[]> {
-  if (spec.aggregate === 'count') return runCountQuery(connectionId, spec)
-  if (spec.aggregate === 'sum') return runSumQuery(connectionId, spec)
-  if (spec.aggregate === 'avg') return runAvgQuery(connectionId, spec)
-  const db = await getDb(connectionId)
-  const snap = await applySpec(baseQuery(db, spec), spec).get()
-  return snap.docs.map(toRecord)
+  if (spec.aggregate === 'count') return runCountQuery(connectionId, spec);
+  if (spec.aggregate === 'sum') return runSumQuery(connectionId, spec);
+  if (spec.aggregate === 'avg') return runAvgQuery(connectionId, spec);
+  const db = await getDb(connectionId);
+  const snap = await applySpec(baseQuery(db, spec), spec).get();
+  return snap.docs.map(toRecord);
 }
 
 /**
@@ -211,10 +211,10 @@ export async function saveDocument(
   connectionId: string,
   doc: DocumentRecord
 ): Promise<DocumentRecord> {
-  await assertWritable(connectionId)
-  const db = await getDb(connectionId)
-  await db.doc(doc.path).set(fromPlainData(doc.data, db))
-  return doc
+  await assertWritable(connectionId);
+  const db = await getDb(connectionId);
+  await db.doc(doc.path).set(fromPlainData(doc.data, db));
+  return doc;
 }
 
 /**
@@ -225,7 +225,7 @@ export async function saveDocument(
  * @returns Resolves once deleted.
  */
 export async function deleteDocument(connectionId: string, path: string): Promise<void> {
-  await assertWritable(connectionId)
-  const db = await getDb(connectionId)
-  await db.doc(path).delete()
+  await assertWritable(connectionId);
+  const db = await getDb(connectionId);
+  await db.doc(path).delete();
 }

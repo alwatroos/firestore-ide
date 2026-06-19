@@ -1,17 +1,17 @@
-import { useAtom } from 'jotai'
-import { type ReactNode, useEffect, useState } from 'react'
-import { Button, ConfirmDialog, Empty, ErrorBanner } from '../../components/ui'
-import { parseJsonObject } from '../../lib/json'
-import { useReadOnly } from '../connections/hooks'
-import { selectedDocumentAtom } from './atoms'
-import { useDocumentMutations } from './hooks'
+import { useAtom } from 'jotai';
+import { type ReactNode, useEffect, useState } from 'react';
+import { Button, ConfirmDialog, Empty, ErrorBanner } from '../../components/ui';
+import { parseJsonObject } from '../../lib/json';
+import { useReadOnly } from '../connections/hooks';
+import { selectedDocumentAtom } from './atoms';
+import { useDocumentMutations } from './hooks';
 
 /** Props for {@link DocumentEditor}. */
 interface EditorProps {
   /** Active connection id, or `null`. */
-  connectionId: string | null
+  connectionId: string | null;
   /** Invoked after a successful save or delete. */
-  onSaved: () => void
+  onSaved: () => void;
 }
 
 /**
@@ -21,20 +21,20 @@ interface EditorProps {
  * @returns The rendered editor, or an empty-state placeholder.
  */
 export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNode {
-  const [selected, setSelected] = useAtom(selectedDocumentAtom)
-  const [draft, setDraft] = useState('')
-  const [parseError, setParseError] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const readOnly = useReadOnly()
-  const { save, remove, error, busy } = useDocumentMutations(connectionId, onSaved)
+  const [selected, setSelected] = useAtom(selectedDocumentAtom);
+  const [draft, setDraft] = useState('');
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const readOnly = useReadOnly();
+  const { save, remove, error, busy } = useDocumentMutations(connectionId, onSaved);
 
   useEffect(() => {
-    setDraft(selected ? JSON.stringify(selected.data, null, 2) : '')
-    setParseError(null)
-  }, [selected])
+    setDraft(selected ? JSON.stringify(selected.data, null, 2) : '');
+    setParseError(null);
+  }, [selected]);
 
-  if (!selected) return <Empty text="Select or create a document to edit" />
-  const doc = selected
+  if (!selected) return <Empty text="Select or create a document to edit" />;
+  const doc = selected;
 
   /**
    * Validate the draft JSON and persist the document.
@@ -42,9 +42,9 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
    * @returns Resolves once saved, or after surfacing a parse error.
    */
   async function onSave(): Promise<void> {
-    const parsed = parseJsonObject(draft)
-    if (!parsed.ok) return setParseError(parsed.error)
-    await save({ ...doc, data: parsed.value })
+    const parsed = parseJsonObject(draft);
+    if (!parsed.ok) return setParseError(parsed.error);
+    await save({ ...doc, data: parsed.value });
   }
 
   /**
@@ -53,9 +53,9 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
    * @returns Resolves once deleted.
    */
   async function onDelete(): Promise<void> {
-    await remove(doc.path)
-    setConfirmDelete(false)
-    setSelected(null)
+    await remove(doc.path);
+    setConfirmDelete(false);
+    setSelected(null);
   }
 
   return (
@@ -117,5 +117,5 @@ export function DocumentEditor({ connectionId, onSaved }: EditorProps): ReactNod
         </ConfirmDialog>
       )}
     </section>
-  )
+  );
 }

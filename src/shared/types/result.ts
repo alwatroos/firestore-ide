@@ -4,4 +4,4 @@
  *
  * @template T - The payload type carried by a successful result.
  */
-export type Result<T> = { ok: true; data: T } | { ok: false; error: string }
+export type Result<T> = { ok: true; data: T } | { ok: false; error: string };

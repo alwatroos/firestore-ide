@@ -1,7 +1,7 @@
-import { resolve } from 'node:path'
-import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path';
+import { defineConfig } from 'vitest/config';
 
-const root = import.meta.dirname
+const root = import.meta.dirname;
 
 export default defineConfig({
   resolve: {
@@ -16,4 +16,4 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: { provider: 'v8', include: ['src/**/*.{ts,tsx}'] },
   },
-})
+});
