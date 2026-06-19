@@ -1,5 +1,5 @@
-import type { QuerySpec } from '@shared/types/firestore'
-import type { Query } from 'firebase-admin/firestore'
+import type { QuerySpec } from '@shared/types/firestore';
+import type { Query } from 'firebase-admin/firestore';
 
 /**
  * Apply only the `where` filters from a {@link QuerySpec} to a base query,
@@ -10,9 +10,9 @@ import type { Query } from 'firebase-admin/firestore'
  * @returns A new query with filters applied.
  */
 export function applyFiltersOnly(base: Query, spec: QuerySpec): Query {
-  let q = base
-  for (const f of spec.filters ?? []) q = q.where(f.field, f.operator, f.value)
-  return q
+  let q = base;
+  for (const f of spec.filters ?? []) q = q.where(f.field, f.operator, f.value);
+  return q;
 }
 
 /**
@@ -23,9 +23,9 @@ export function applyFiltersOnly(base: Query, spec: QuerySpec): Query {
  * @returns A new query with all clauses applied.
  */
 export function applySpec(base: Query, spec: QuerySpec): Query {
-  const filtered = applyFiltersOnly(base, spec)
-  const ordered = spec.order ? filtered.orderBy(spec.order.field, spec.order.direction) : filtered
-  return ordered.limit(clampLimit(spec.limit))
+  const filtered = applyFiltersOnly(base, spec);
+  const ordered = spec.order ? filtered.orderBy(spec.order.field, spec.order.direction) : filtered;
+  return ordered.limit(clampLimit(spec.limit));
 }
 
 /**
@@ -35,6 +35,6 @@ export function applySpec(base: Query, spec: QuerySpec): Query {
  * @returns A bounded limit between 1 and 500 (default 50).
  */
 export function clampLimit(limit?: number): number {
-  if (!limit || limit < 1) return 50
-  return Math.min(limit, 500)
+  if (!limit || limit < 1) return 50;
+  return Math.min(limit, 500);
 }

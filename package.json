@@ -32,7 +32,8 @@
     "format:write": "biome format --write .",
     "check": "biome check .",
     "check:write": "biome check --write .",
-    "lint:fix": "biome format --write ."
+    "lint:fix": "biome format --write .",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "firebase-admin": "14.0.0",

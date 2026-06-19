@@ -1,5 +1,5 @@
-import { join } from 'node:path'
-import { app } from 'electron'
+import { join } from 'node:path';
+import { app } from 'electron';
 
 /**
  * Absolute path to the connections store file inside the OS user-data dir.
@@ -7,7 +7,7 @@ import { app } from 'electron'
  * @returns Path to `connections.json`.
  */
 export function connectionsFile(): string {
-  return join(app.getPath('userData'), 'connections.json')
+  return join(app.getPath('userData'), 'connections.json');
 }
 
 /**
@@ -16,7 +16,7 @@ export function connectionsFile(): string {
  * @returns Path to `settings.json`.
  */
 export function settingsFile(): string {
-  return join(app.getPath('userData'), 'settings.json')
+  return join(app.getPath('userData'), 'settings.json');
 }
 
 /**
@@ -25,5 +25,5 @@ export function settingsFile(): string {
  * @returns Path to `queries.json`.
  */
 export function queriesFile(): string {
-  return join(app.getPath('userData'), 'queries.json')
+  return join(app.getPath('userData'), 'queries.json');
 }

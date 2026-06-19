@@ -1,7 +1,7 @@
-import { IPC, streamChannels } from '@shared/ipc/channels'
-import type { FirestoreIdeApi } from '@shared/types/api'
-import type { GeneratedQuery } from '@shared/types/ollama'
-import { contextBridge, type IpcRendererEvent, ipcRenderer } from 'electron'
+import { IPC, streamChannels } from '@shared/ipc/channels';
+import type { FirestoreIdeApi } from '@shared/types/api';
+import type { GeneratedQuery } from '@shared/types/ollama';
+import { contextBridge, type IpcRendererEvent, ipcRenderer } from 'electron';
 
 /**
  * The renderer-facing API. Every method is a thin `ipcRenderer.invoke` wrapper;
@@ -31,27 +31,27 @@ const api: FirestoreIdeApi = {
   listModels: (host) => ipcRenderer.invoke(IPC.ollamaListModels, host),
   generateQuery: (input) => ipcRenderer.invoke(IPC.ollamaGenerateQuery, input),
   generateQueryStream: (input, onChunk, onDone, onError) => {
-    const streamId = crypto.randomUUID()
-    const ch = streamChannels(streamId)
-    let active = true
+    const streamId = crypto.randomUUID();
+    const ch = streamChannels(streamId);
+    let active = true;
     function chunkHandler(_: IpcRendererEvent, text: string) {
-      if (active) onChunk(text)
+      if (active) onChunk(text);
     }
     function cleanup() {
-      active = false
-      ipcRenderer.removeListener(ch.chunk, chunkHandler)
+      active = false;
+      ipcRenderer.removeListener(ch.chunk, chunkHandler);
     }
-    ipcRenderer.on(ch.chunk, chunkHandler)
+    ipcRenderer.on(ch.chunk, chunkHandler);
     ipcRenderer.once(ch.done, (_: IpcRendererEvent, result: GeneratedQuery) => {
-      cleanup()
-      onDone(result)
-    })
+      cleanup();
+      onDone(result);
+    });
     ipcRenderer.once(ch.error, (_: IpcRendererEvent, error: string) => {
-      cleanup()
-      onError(error)
-    })
-    ipcRenderer.send(IPC.ollamaGenerateQueryStream, input, streamId)
-    return cleanup
+      cleanup();
+      onError(error);
+    });
+    ipcRenderer.send(IPC.ollamaGenerateQueryStream, input, streamId);
+    return cleanup;
   },
   saveFile: (suggestedName, content, filters) =>
     ipcRenderer.invoke(IPC.filesSave, suggestedName, content, filters),
@@ -64,6 +64,6 @@ const api: FirestoreIdeApi = {
   getActiveRules: (id) => ipcRenderer.invoke(IPC.rulesGetActive, id),
   getSettings: () => ipcRenderer.invoke(IPC.settingsGet),
   saveSettings: (settings) => ipcRenderer.invoke(IPC.settingsSave, settings),
-}
+};
 
-contextBridge.exposeInMainWorld('api', api)
+contextBridge.exposeInMainWorld('api', api);

@@ -1,15 +1,15 @@
-import type { QuerySpec } from '@shared/types/firestore'
-import { type ReactNode, useState } from 'react'
-import { Button } from '../../components/ui'
-import { api } from '../../lib/api'
-import { extractIndexUrl, indexesFileSnippet } from './indexes'
+import type { QuerySpec } from '@shared/types/firestore';
+import { type ReactNode, useState } from 'react';
+import { Button } from '../../components/ui';
+import { api } from '../../lib/api';
+import { extractIndexUrl, indexesFileSnippet } from './indexes';
 
 /** Props for {@link IndexHint}. */
 interface IndexHintProps {
   /** The spec that triggered the missing-index error. */
-  spec: QuerySpec
+  spec: QuerySpec;
   /** The raw error message (may contain a console URL). */
-  message: string
+  message: string;
 }
 
 /**
@@ -21,9 +21,9 @@ interface IndexHintProps {
  * @returns The rendered hint panel.
  */
 export function IndexHint({ spec, message }: IndexHintProps): ReactNode {
-  const [open, setOpen] = useState(false)
-  const url = extractIndexUrl(message)
-  const snippet = indexesFileSnippet(spec)
+  const [open, setOpen] = useState(false);
+  const url = extractIndexUrl(message);
+  const snippet = indexesFileSnippet(spec);
 
   return (
     <div className="space-y-2 rounded bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
@@ -66,5 +66,5 @@ export function IndexHint({ spec, message }: IndexHintProps): ReactNode {
         </>
       )}
     </div>
-  )
+  );
 }

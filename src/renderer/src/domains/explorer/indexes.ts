@@ -1,30 +1,30 @@
-import type { QueryOperator, QuerySpec } from '@shared/types/firestore'
+import type { QueryOperator, QuerySpec } from '@shared/types/firestore';
 
 /** A single field entry in a Firestore composite index definition. */
 export interface IndexField {
   /** Document field path. */
-  fieldPath: string
+  fieldPath: string;
   /** Sort order for scalar fields. */
-  order?: 'ASCENDING' | 'DESCENDING'
+  order?: 'ASCENDING' | 'DESCENDING';
   /** Array configuration for `array-contains`/`array-contains-any` fields. */
-  arrayConfig?: 'CONTAINS'
+  arrayConfig?: 'CONTAINS';
 }
 
 /** A Firestore composite index definition (matches `firestore.indexes.json`). */
 export interface IndexDefinition {
   /** Collection id the index applies to. */
-  collectionGroup: string
+  collectionGroup: string;
   /** Whether the index covers one collection or a collection group. */
-  queryScope: 'COLLECTION' | 'COLLECTION_GROUP'
+  queryScope: 'COLLECTION' | 'COLLECTION_GROUP';
   /** Ordered index fields. */
-  fields: IndexField[]
+  fields: IndexField[];
 }
 
 /** Operators that require an array index configuration. */
 const ARRAY_OPERATORS: ReadonlySet<QueryOperator> = new Set<QueryOperator>([
   'array-contains',
   'array-contains-any',
-])
+]);
 
 /**
  * Extract a Firebase console "create index" URL from an error message.
@@ -33,8 +33,8 @@ const ARRAY_OPERATORS: ReadonlySet<QueryOperator> = new Set<QueryOperator>([
  * @returns The console URL, or `null` when none is present.
  */
 export function extractIndexUrl(message: string): string | null {
-  const match = message.match(/https?:\/\/console\.firebase\.google\.com\/[^\s)"']+/)
-  return match ? match[0] : null
+  const match = message.match(/https?:\/\/console\.firebase\.google\.com\/[^\s)"']+/);
+  return match ? match[0] : null;
 }
 
 /**
@@ -44,7 +44,9 @@ export function extractIndexUrl(message: string): string | null {
  * @returns True when the error looks like a missing-index error.
  */
 export function isMissingIndexError(message: string): boolean {
-  return /requires an index|FAILED_PRECONDITION/i.test(message) || extractIndexUrl(message) !== null
+  return (
+    /requires an index|FAILED_PRECONDITION/i.test(message) || extractIndexUrl(message) !== null
+  );
 }
 
 /**
@@ -56,31 +58,31 @@ export function isMissingIndexError(message: string): boolean {
  * @returns A composite index definition.
  */
 export function buildIndexDefinition(spec: QuerySpec): IndexDefinition {
-  const leaf = spec.collectionPath.split('/').pop() ?? spec.collectionPath
-  const byPath = new Map<string, IndexField>()
+  const leaf = spec.collectionPath.split('/').pop() ?? spec.collectionPath;
+  const byPath = new Map<string, IndexField>();
 
-  const equality = (spec.filters ?? []).filter((filter) => filter.operator === '==')
-  const others = (spec.filters ?? []).filter((filter) => filter.operator !== '==')
+  const equality = (spec.filters ?? []).filter((filter) => filter.operator === '==');
+  const others = (spec.filters ?? []).filter((filter) => filter.operator !== '==');
 
   for (const filter of [...equality, ...others]) {
     if (ARRAY_OPERATORS.has(filter.operator))
-      byPath.set(filter.field, { fieldPath: filter.field, arrayConfig: 'CONTAINS' })
+      byPath.set(filter.field, { fieldPath: filter.field, arrayConfig: 'CONTAINS' });
     else if (!byPath.has(filter.field))
-      byPath.set(filter.field, { fieldPath: filter.field, order: 'ASCENDING' })
+      byPath.set(filter.field, { fieldPath: filter.field, order: 'ASCENDING' });
   }
 
   if (spec.order) {
     byPath.set(spec.order.field, {
       fieldPath: spec.order.field,
       order: spec.order.direction === 'desc' ? 'DESCENDING' : 'ASCENDING',
-    })
+    });
   }
 
   return {
     collectionGroup: leaf,
     queryScope: spec.collectionGroup ? 'COLLECTION_GROUP' : 'COLLECTION',
     fields: [...byPath.values()],
-  }
+  };
 }
 
 /**
@@ -90,5 +92,5 @@ export function buildIndexDefinition(spec: QuerySpec): IndexDefinition {
  * @returns A pretty-printed JSON string ready to copy or save.
  */
 export function indexesFileSnippet(spec: QuerySpec): string {
-  return JSON.stringify({ indexes: [buildIndexDefinition(spec)] }, null, 2)
+  return JSON.stringify({ indexes: [buildIndexDefinition(spec)] }, null, 2);
 }

@@ -1,32 +1,32 @@
-import type { QueryHistoryEntry, SavedQuery } from '@shared/types/queries'
-import { useAtomValue } from 'jotai'
-import { type ReactNode, useState } from 'react'
-import { Button, Empty, ErrorBanner } from '../../components/ui'
-import { activeConnectionAtom } from '../connections/atoms'
-import { queryDraftAtom, queryModeAtom } from '../explorer/atoms'
-import { useLoadQuery, useQueryHistory, useSavedQueries } from './hooks'
+import type { QueryHistoryEntry, SavedQuery } from '@shared/types/queries';
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useState } from 'react';
+import { Button, Empty, ErrorBanner } from '../../components/ui';
+import { activeConnectionAtom } from '../connections/atoms';
+import { queryDraftAtom, queryModeAtom } from '../explorer/atoms';
+import { useLoadQuery, useQueryHistory, useSavedQueries } from './hooks';
 
 /** A short, one-line preview of a query body. */
 function preview(query: string): string {
-  return query.replace(/\s+/g, ' ').trim().slice(0, 80)
+  return query.replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 
 /** Saved-queries section: load, delete and save the current draft. */
 function SavedSection(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const draft = useAtomValue(queryDraftAtom)
-  const mode = useAtomValue(queryModeAtom)
-  const { saved, error, save, remove } = useSavedQueries()
-  const load = useLoadQuery()
-  const [name, setName] = useState('')
+  const active = useAtomValue(activeConnectionAtom);
+  const draft = useAtomValue(queryDraftAtom);
+  const mode = useAtomValue(queryModeAtom);
+  const { saved, error, save, remove } = useSavedQueries();
+  const load = useLoadQuery();
+  const [name, setName] = useState('');
 
-  const mine = saved.filter((query) => query.connectionId === active?.id)
+  const mine = saved.filter((query) => query.connectionId === active?.id);
 
   /** Save the current editor draft under the typed name. */
   function onSave(): void {
-    if (!active || !draft.trim() || !name.trim()) return
-    void save({ name: name.trim(), connectionId: active.id, kind: mode, query: draft })
-    setName('')
+    if (!active || !draft.trim() || !name.trim()) return;
+    void save({ name: name.trim(), connectionId: active.id, kind: mode, query: draft });
+    setName('');
   }
 
   return (
@@ -76,17 +76,17 @@ function SavedSection(): ReactNode {
         </ul>
       )}
     </section>
-  )
+  );
 }
 
 /** History section: load any past run back into the editor. */
 function HistorySection(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const { history, error } = useQueryHistory()
-  const load = useLoadQuery()
-  const mine = history.filter((entry) => entry.connectionId === active?.id)
+  const active = useAtomValue(activeConnectionAtom);
+  const { history, error } = useQueryHistory();
+  const load = useLoadQuery();
+  const mine = history.filter((entry) => entry.connectionId === active?.id);
 
-  if (mine.length === 0) return <Empty text="No query history yet" />
+  if (mine.length === 0) return <Empty text="No query history yet" />;
   return (
     <section className="space-y-2">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">History</h3>
@@ -117,7 +117,7 @@ function HistorySection(): ReactNode {
         ))}
       </ul>
     </section>
-  )
+  );
 }
 
 /**
@@ -132,5 +132,5 @@ export function QueryHistoryPanel(): ReactNode {
       <SavedSection />
       <HistorySection />
     </div>
-  )
+  );
 }

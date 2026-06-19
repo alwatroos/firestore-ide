@@ -1,4 +1,4 @@
-import type { Result } from '../types/result'
+import type { Result } from '../types/result';
 
 /**
  * Build a successful {@link Result}.
@@ -8,7 +8,7 @@ import type { Result } from '../types/result'
  * @returns A successful result wrapping `data`.
  */
 export function ok<T>(data: T): Result<T> {
-  return { ok: true, data }
+  return { ok: true, data };
 }
 
 /**
@@ -18,7 +18,7 @@ export function ok<T>(data: T): Result<T> {
  * @returns A failed result.
  */
 export function err(error: string): Result<never> {
-  return { ok: false, error }
+  return { ok: false, error };
 }
 
 /**
@@ -29,6 +29,6 @@ export function err(error: string): Result<never> {
  * @returns A concise, displayable error message.
  */
 export function toMessage(error: unknown): string {
-  if (error instanceof Error) return error.message
-  return typeof error === 'string' ? error : 'Unexpected error'
+  if (error instanceof Error) return error.message;
+  return typeof error === 'string' ? error : 'Unexpected error';
 }

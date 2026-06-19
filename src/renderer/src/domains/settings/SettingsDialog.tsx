@@ -1,13 +1,13 @@
-import type { Theme } from '@shared/types/settings'
-import { type ReactNode, useState } from 'react'
-import { Button, ErrorBanner } from '../../components/ui'
-import { useSettings } from './hooks'
+import type { Theme } from '@shared/types/settings';
+import { type ReactNode, useState } from 'react';
+import { Button, ErrorBanner } from '../../components/ui';
+import { useSettings } from './hooks';
 
 const THEME_LABELS: Record<Theme, string> = {
   system: 'System',
   light: 'Light',
   dark: 'Dark',
-}
+};
 
 /**
  * Modal-style panel for editing Ollama host, sampling settings and the UI theme.
@@ -16,11 +16,11 @@ const THEME_LABELS: Record<Theme, string> = {
  * @returns The rendered settings dialog.
  */
 export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode {
-  const { settings, save, error, busy } = useSettings()
-  const [host, setHost] = useState(settings.ollamaHost)
-  const [sampleSize, setSampleSize] = useState(settings.schemaSampleSize)
-  const [theme, setTheme] = useState<Theme>(settings.theme)
-  const [readOnly, setReadOnly] = useState(settings.readOnly)
+  const { settings, save, error, busy } = useSettings();
+  const [host, setHost] = useState(settings.ollamaHost);
+  const [sampleSize, setSampleSize] = useState(settings.schemaSampleSize);
+  const [theme, setTheme] = useState<Theme>(settings.theme);
+  const [readOnly, setReadOnly] = useState(settings.readOnly);
 
   /**
    * Persist the edited settings then close the dialog.
@@ -28,8 +28,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode 
    * @returns Resolves once saved.
    */
   async function onSave(): Promise<void> {
-    await save({ ...settings, ollamaHost: host, schemaSampleSize: sampleSize, theme, readOnly })
-    onClose()
+    await save({ ...settings, ollamaHost: host, schemaSampleSize: sampleSize, theme, readOnly });
+    onClose();
   }
 
   return (
@@ -97,5 +97,5 @@ export function SettingsDialog({ onClose }: { onClose: () => void }): ReactNode 
         </div>
       </div>
     </div>
-  )
+  );
 }

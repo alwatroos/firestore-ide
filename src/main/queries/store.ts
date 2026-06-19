@@ -1,17 +1,17 @@
-import type { QueryHistoryEntry, SavedQuery } from '@shared/types/queries'
-import { readJson, writeJson } from '../core/jsonFile'
-import { queriesFile } from '../core/paths'
+import type { QueryHistoryEntry, SavedQuery } from '@shared/types/queries';
+import { readJson, writeJson } from '../core/jsonFile';
+import { queriesFile } from '../core/paths';
 
 /** On-disk shape of the queries store. */
 export interface QueriesStore {
   /** Most-recent-first execution history. */
-  history: QueryHistoryEntry[]
+  history: QueryHistoryEntry[];
   /** User-named saved queries. */
-  saved: SavedQuery[]
+  saved: SavedQuery[];
 }
 
 /** Empty store used when the file does not yet exist. */
-const EMPTY: QueriesStore = { history: [], saved: [] }
+const EMPTY: QueriesStore = { history: [], saved: [] };
 
 /**
  * Load the persisted query history and saved queries.
@@ -19,7 +19,7 @@ const EMPTY: QueriesStore = { history: [], saved: [] }
  * @returns The store, or an empty store when none exists.
  */
 export async function loadQueries(): Promise<QueriesStore> {
-  return { ...EMPTY, ...(await readJson<Partial<QueriesStore>>(queriesFile(), EMPTY)) }
+  return { ...EMPTY, ...(await readJson<Partial<QueriesStore>>(queriesFile(), EMPTY)) };
 }
 
 /**
@@ -29,5 +29,5 @@ export async function loadQueries(): Promise<QueriesStore> {
  * @returns Resolves once written.
  */
 export async function persistQueries(store: QueriesStore): Promise<void> {
-  await writeJson(queriesFile(), store)
+  await writeJson(queriesFile(), store);
 }

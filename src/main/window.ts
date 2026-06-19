@@ -1,8 +1,8 @@
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { BrowserWindow, shell } from 'electron'
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { BrowserWindow, shell } from 'electron';
 
-const moduleDir = dirname(fileURLToPath(import.meta.url))
+const moduleDir = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Build hardened `webPreferences` for the main window.
@@ -15,7 +15,7 @@ function buildPreferences(): Electron.WebPreferences {
     sandbox: false,
     contextIsolation: true,
     nodeIntegration: false,
-  }
+  };
 }
 
 /**
@@ -25,9 +25,9 @@ function buildPreferences(): Electron.WebPreferences {
  * @returns Nothing; triggers an asynchronous load.
  */
 function loadContent(window: BrowserWindow): void {
-  const devUrl = process.env.ELECTRON_RENDERER_URL
-  if (devUrl) void window.loadURL(devUrl)
-  else void window.loadFile(join(moduleDir, '../renderer/index.html'))
+  const devUrl = process.env.ELECTRON_RENDERER_URL;
+  if (devUrl) void window.loadURL(devUrl);
+  else void window.loadFile(join(moduleDir, '../renderer/index.html'));
 }
 
 /**
@@ -42,12 +42,12 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     webPreferences: buildPreferences(),
-  })
-  window.on('ready-to-show', () => window.show())
+  });
+  window.on('ready-to-show', () => window.show());
   window.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
-    return { action: 'deny' }
-  })
-  loadContent(window)
-  return window
+    void shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  loadContent(window);
+  return window;
 }

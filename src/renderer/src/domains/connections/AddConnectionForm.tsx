@@ -1,6 +1,6 @@
-import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react'
-import { Button, ErrorBanner } from '../../components/ui'
-import { useConnectionActions, useRefreshConnections } from './hooks'
+import { type ChangeEvent, type FormEvent, type ReactNode, useState } from 'react';
+import { Button, ErrorBanner } from '../../components/ui';
+import { useConnectionActions, useRefreshConnections } from './hooks';
 
 /**
  * Form for importing a new connection from a service account key file.
@@ -8,10 +8,10 @@ import { useConnectionActions, useRefreshConnections } from './hooks'
  * @returns The rendered form.
  */
 export function AddConnectionForm(): ReactNode {
-  const [name, setName] = useState('')
-  const [json, setJson] = useState('')
-  const refresh = useRefreshConnections()
-  const { add, busy, error } = useConnectionActions(refresh)
+  const [name, setName] = useState('');
+  const [json, setJson] = useState('');
+  const refresh = useRefreshConnections();
+  const { add, busy, error } = useConnectionActions(refresh);
 
   /**
    * Read a chosen JSON key file into state, defaulting the name from it.
@@ -20,10 +20,10 @@ export function AddConnectionForm(): ReactNode {
    * @returns Resolves once the file has been read.
    */
   async function onFile(event: ChangeEvent<HTMLInputElement>): Promise<void> {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setJson(await file.text())
-    if (!name) setName(file.name.replace(/\.json$/i, ''))
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setJson(await file.text());
+    if (!name) setName(file.name.replace(/\.json$/i, ''));
   }
 
   /**
@@ -33,10 +33,10 @@ export function AddConnectionForm(): ReactNode {
    * @returns Resolves once the connection has been added.
    */
   async function onSubmit(event: FormEvent): Promise<void> {
-    event.preventDefault()
-    await add({ name: name.trim(), serviceAccountJson: json })
-    setName('')
-    setJson('')
+    event.preventDefault();
+    await add({ name: name.trim(), serviceAccountJson: json });
+    setName('');
+    setJson('');
   }
 
   return (
@@ -61,5 +61,5 @@ export function AddConnectionForm(): ReactNode {
         Add connection
       </Button>
     </form>
-  )
+  );
 }

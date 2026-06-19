@@ -1,5 +1,5 @@
-import { requireConnection } from '../connections/store'
-import { loadSettings } from '../settings/store'
+import { requireConnection } from '../connections/store';
+import { loadSettings } from '../settings/store';
 
 /**
  * Determine whether writes are currently blocked for a connection, honouring
@@ -9,10 +9,10 @@ import { loadSettings } from '../settings/store'
  * @returns True when any write must be refused.
  */
 export async function isReadOnly(connectionId: string): Promise<boolean> {
-  const settings = await loadSettings()
-  if (settings.readOnly) return true
-  const connection = await requireConnection(connectionId)
-  return connection.readOnly === true
+  const settings = await loadSettings();
+  if (settings.readOnly) return true;
+  const connection = await requireConnection(connectionId);
+  return connection.readOnly === true;
 }
 
 /**
@@ -25,6 +25,6 @@ export async function isReadOnly(connectionId: string): Promise<boolean> {
  */
 export async function assertWritable(connectionId: string): Promise<void> {
   if (await isReadOnly(connectionId)) {
-    throw new Error('This connection is read-only. Disable read-only mode to make changes.')
+    throw new Error('This connection is read-only. Disable read-only mode to make changes.');
   }
 }

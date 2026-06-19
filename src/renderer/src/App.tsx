@@ -1,26 +1,26 @@
-import { useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
-import { ResizableSplit } from './components/ResizableSplit'
-import { Sidebar } from './components/Sidebar'
-import { AiQueryPanel } from './domains/ai/AiQueryPanel'
-import { activeConnectionAtom } from './domains/connections/atoms'
-import { selectedDocumentAtom } from './domains/documents/atoms'
-import { DocumentEditor } from './domains/documents/DocumentEditor'
-import { activeQueryTabIdAtom, documentsVersionAtom } from './domains/explorer/atoms'
-import { ExplorerPane } from './domains/explorer/ExplorerPane'
-import { QueryTabBar } from './domains/explorer/QueryTabBar'
-import { RulesDialog } from './domains/rules/RulesDialog'
-import { settingsAtom } from './domains/settings/atoms'
-import { SettingsDialog } from './domains/settings/SettingsDialog'
+import { useAtomValue, useSetAtom } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { ResizableSplit } from './components/ResizableSplit';
+import { Sidebar } from './components/Sidebar';
+import { AiQueryPanel } from './domains/ai/AiQueryPanel';
+import { activeConnectionAtom } from './domains/connections/atoms';
+import { selectedDocumentAtom } from './domains/documents/atoms';
+import { DocumentEditor } from './domains/documents/DocumentEditor';
+import { activeQueryTabIdAtom, documentsVersionAtom } from './domains/explorer/atoms';
+import { ExplorerPane } from './domains/explorer/ExplorerPane';
+import { QueryTabBar } from './domains/explorer/QueryTabBar';
+import { RulesDialog } from './domains/rules/RulesDialog';
+import { settingsAtom } from './domains/settings/atoms';
+import { SettingsDialog } from './domains/settings/SettingsDialog';
 
 /** Props for {@link MainContent}. */
 interface MainContentProps {
   /** Active connection id passed to the document editor. */
-  connectionId: string | null
+  connectionId: string | null;
   /** Invoked after a successful save or delete. */
-  onSaved: () => void
+  onSaved: () => void;
   /** Opens the settings dialog from the AI panel. */
-  onOpenSettings: () => void
+  onOpenSettings: () => void;
 }
 
 /**
@@ -31,25 +31,25 @@ interface MainContentProps {
  * @returns The rendered content area.
  */
 function MainContent({ connectionId, onSaved, onOpenSettings }: MainContentProps): ReactNode {
-  const selectedDocument = useAtomValue(selectedDocumentAtom)
-  const activeTabId = useAtomValue(activeQueryTabIdAtom)
-  const editor = <DocumentEditor connectionId={connectionId} onSaved={onSaved} />
+  const selectedDocument = useAtomValue(selectedDocumentAtom);
+  const activeTabId = useAtomValue(activeQueryTabIdAtom);
+  const editor = <DocumentEditor connectionId={connectionId} onSaved={onSaved} />;
   // key forces a fresh component instance (and fresh hooks) for each tab while
   // the per-tab atoms preserve the instruction/draft/stream state across switches.
-  const aiPanel = <AiQueryPanel key={activeTabId} onOpenSettings={onOpenSettings} />
+  const aiPanel = <AiQueryPanel key={activeTabId} onOpenSettings={onOpenSettings} />;
 
   const explorerContent = selectedDocument ? (
     <ResizableSplit left={<ExplorerPane />} right={editor} />
   ) : (
     <ExplorerPane />
-  )
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <QueryTabBar />
       <ResizableSplit direction="vertical" top={explorerContent} bottom={aiPanel} minHeight={80} />
     </div>
-  )
+  );
 }
 
 /**
@@ -64,32 +64,32 @@ function useSidebarResize(
   collapsed: boolean,
   onExpand: () => void
 ): { width: number; startDividerDrag: () => void } {
-  const [width, setWidth] = useState(288)
-  const dragging = useRef(false)
+  const [width, setWidth] = useState(288);
+  const dragging = useRef(false);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (!dragging.current) return
-      const newWidth = Math.max(160, Math.min(e.clientX, 480))
-      setWidth(newWidth)
-      if (collapsed && newWidth > 160) onExpand()
-    }
+      if (!dragging.current) return;
+      const newWidth = Math.max(160, Math.min(e.clientX, 480));
+      setWidth(newWidth);
+      if (collapsed && newWidth > 160) onExpand();
+    };
     const onUp = () => {
-      dragging.current = false
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
+      dragging.current = false;
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
     return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-  }, [collapsed, onExpand])
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [collapsed, onExpand]);
 
   const startDividerDrag = useCallback(() => {
-    dragging.current = true
-  }, [])
+    dragging.current = true;
+  }, []);
 
-  return { width, startDividerDrag }
+  return { width, startDividerDrag };
 }
 
 /**
@@ -99,38 +99,38 @@ function useSidebarResize(
  * @returns The rendered application.
  */
 export function App(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const bumpVersion = useSetAtom(documentsVersionAtom)
-  const [showSettings, setShowSettings] = useState(false)
-  const [showRules, setShowRules] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const onSaved = useCallback(() => bumpVersion((v) => v + 1), [bumpVersion])
-  const settings = useAtomValue(settingsAtom)
+  const active = useAtomValue(activeConnectionAtom);
+  const bumpVersion = useSetAtom(documentsVersionAtom);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const onSaved = useCallback(() => bumpVersion((v) => v + 1), [bumpVersion]);
+  const settings = useAtomValue(settingsAtom);
 
-  const expandSidebar = useCallback(() => setSidebarCollapsed(false), [])
-  const toggleSidebar = useCallback(() => setSidebarCollapsed((c) => !c), [])
+  const expandSidebar = useCallback(() => setSidebarCollapsed(false), []);
+  const toggleSidebar = useCallback(() => setSidebarCollapsed((c) => !c), []);
   const { width: sidebarWidth, startDividerDrag } = useSidebarResize(
     sidebarCollapsed,
     expandSidebar
-  )
+  );
 
   useEffect(() => {
-    const root = document.documentElement
+    const root = document.documentElement;
     if (settings.theme === 'dark') {
-      root.classList.add('dark')
-      return
+      root.classList.add('dark');
+      return;
     }
     if (settings.theme === 'light') {
-      root.classList.remove('dark')
-      return
+      root.classList.remove('dark');
+      return;
     }
     // system: follow prefers-color-scheme and keep in sync
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    root.classList.toggle('dark', mq.matches)
-    const handler = (e: MediaQueryListEvent) => root.classList.toggle('dark', e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [settings.theme])
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    root.classList.toggle('dark', mq.matches);
+    const handler = (e: MediaQueryListEvent) => root.classList.toggle('dark', e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [settings.theme]);
 
   return (
     <div className="flex h-screen text-slate-800 dark:bg-slate-950 dark:text-slate-200">
@@ -161,7 +161,7 @@ export function App(): ReactNode {
         <RulesDialog connectionId={active?.id ?? null} onClose={() => setShowRules(false)} />
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -176,9 +176,9 @@ function SidebarDivider({
   onMouseDown,
   onExpand,
 }: {
-  collapsed: boolean
-  onMouseDown: () => void
-  onExpand: () => void
+  collapsed: boolean;
+  onMouseDown: () => void;
+  onExpand: () => void;
 }): ReactNode {
   return (
     <div
@@ -197,5 +197,5 @@ function SidebarDivider({
         </button>
       )}
     </div>
-  )
+  );
 }

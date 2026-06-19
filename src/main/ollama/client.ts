@@ -1,6 +1,6 @@
-import type { OllamaModel } from '@shared/types/ollama'
-import { Ollama } from 'ollama'
-import type { ChatMessage } from './prompt'
+import type { OllamaModel } from '@shared/types/ollama';
+import { Ollama } from 'ollama';
+import type { ChatMessage } from './prompt';
 
 /**
  * List the models available on an Ollama host.
@@ -9,9 +9,9 @@ import type { ChatMessage } from './prompt'
  * @returns The advertised models with optional sizes.
  */
 export async function listModels(host: string): Promise<OllamaModel[]> {
-  const client = new Ollama({ host })
-  const res = await client.list()
-  return res.models.map((model) => ({ name: model.name, size: model.size }))
+  const client = new Ollama({ host });
+  const res = await client.list();
+  return res.models.map((model) => ({ name: model.name, size: model.size }));
 }
 
 /**
@@ -27,9 +27,9 @@ export async function chatJson(
   model: string,
   messages: ChatMessage[]
 ): Promise<string> {
-  const client = new Ollama({ host })
-  const res = await client.chat({ model, messages, format: 'json', stream: false })
-  return res.message.content
+  const client = new Ollama({ host });
+  const res = await client.chat({ model, messages, format: 'json', stream: false });
+  return res.message.content;
 }
 
 /**
@@ -47,15 +47,15 @@ export async function chatJsonStream(
   messages: ChatMessage[],
   onChunk: (text: string) => void
 ): Promise<string> {
-  const client = new Ollama({ host })
-  const stream = await client.chat({ model, messages, format: 'json', stream: true })
-  let full = ''
+  const client = new Ollama({ host });
+  const stream = await client.chat({ model, messages, format: 'json', stream: true });
+  let full = '';
   for await (const chunk of stream) {
-    const text = chunk.message.content
+    const text = chunk.message.content;
     if (text) {
-      full += text
-      onChunk(text)
+      full += text;
+      onChunk(text);
     }
   }
-  return full
+  return full;
 }

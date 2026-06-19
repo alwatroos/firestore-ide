@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 /**
  * Read and parse a JSON file, returning a fallback when it does not yet exist.
@@ -11,10 +11,10 @@ import { dirname } from 'node:path'
  */
 export async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
-    return JSON.parse(await readFile(filePath, 'utf8')) as T
+    return JSON.parse(await readFile(filePath, 'utf8')) as T;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return fallback
-    throw error
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return fallback;
+    throw error;
   }
 }
 
@@ -27,6 +27,6 @@ export async function readJson<T>(filePath: string, fallback: T): Promise<T> {
  * @returns Resolves once the file has been written.
  */
 export async function writeJson<T>(filePath: string, value: T): Promise<void> {
-  await mkdir(dirname(filePath), { recursive: true })
-  await writeFile(filePath, JSON.stringify(value, null, 2), 'utf8')
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(value, null, 2), 'utf8');
 }

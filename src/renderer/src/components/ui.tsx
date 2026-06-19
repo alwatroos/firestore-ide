@@ -1,19 +1,19 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 /** Visual variants for {@link Button}. */
-type Variant = 'primary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'ghost' | 'danger';
 
 const VARIANT_CLASS: Record<Variant, string> = {
   primary: 'bg-blue-600 hover:bg-blue-500 text-white',
   ghost:
     'bg-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300',
   danger: 'bg-red-600 hover:bg-red-500 text-white',
-}
+};
 
 /** Props for {@link Button}. */
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual style. */
-  variant?: Variant
+  variant?: Variant;
 }
 
 /**
@@ -23,8 +23,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * @returns The rendered button.
  */
 export function Button({ variant = 'primary', className = '', ...rest }: ButtonProps): ReactNode {
-  const base = 'rounded px-3 py-1.5 text-sm font-medium disabled:opacity-40 transition'
-  return <button className={`${base} ${VARIANT_CLASS[variant]} ${className}`} {...rest} />
+  const base = 'rounded px-3 py-1.5 text-sm font-medium disabled:opacity-40 transition';
+  return <button className={`${base} ${VARIANT_CLASS[variant]} ${className}`} {...rest} />;
 }
 
 /**
@@ -34,12 +34,12 @@ export function Button({ variant = 'primary', className = '', ...rest }: ButtonP
  * @returns The banner, or `null`.
  */
 export function ErrorBanner({ message }: { message: string | null }): ReactNode {
-  if (!message) return null
+  if (!message) return null;
   return (
     <div className="rounded bg-red-100 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-400">
       {message}
     </div>
-  )
+  );
 }
 
 /**
@@ -49,7 +49,7 @@ export function ErrorBanner({ message }: { message: string | null }): ReactNode 
  * @returns The rendered placeholder.
  */
 export function Empty({ text }: { text: string }): ReactNode {
-  return <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">{text}</div>
+  return <div className="p-6 text-center text-sm text-slate-400 dark:text-slate-500">{text}</div>;
 }
 
 /**
@@ -59,32 +59,32 @@ export function Empty({ text }: { text: string }): ReactNode {
  * @returns The banner, or `null`.
  */
 export function WarningList({ messages }: { messages: string[] }): ReactNode {
-  if (messages.length === 0) return null
+  if (messages.length === 0) return null;
   return (
     <ul className="space-y-0.5 rounded bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
       {messages.map((message) => (
         <li key={message}>⚠ {message}</li>
       ))}
     </ul>
-  )
+  );
 }
 
 /** Props for {@link ConfirmDialog}. */
 interface ConfirmDialogProps {
   /** Dialog heading. */
-  title: string
+  title: string;
   /** Optional rich body (e.g. a preview of what will change). */
-  children?: ReactNode
+  children?: ReactNode;
   /** Confirm button label (defaults to `Confirm`). */
-  confirmLabel?: string
+  confirmLabel?: string;
   /** When true, the confirm button uses the destructive style. */
-  danger?: boolean
+  danger?: boolean;
   /** Disables the confirm button while an action is in flight. */
-  busy?: boolean
+  busy?: boolean;
   /** Invoked when the user confirms. */
-  onConfirm: () => void
+  onConfirm: () => void;
   /** Invoked when the user cancels or dismisses. */
-  onCancel: () => void
+  onCancel: () => void;
 }
 
 /**
@@ -126,5 +126,5 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react';
 
 /** State and runner returned by {@link useAsync}. */
 interface AsyncState {
   /** Last error message, or `null`. */
-  error: string | null
+  error: string | null;
   /** Whether an async action is in flight. */
-  busy: boolean
+  busy: boolean;
   /** Run an async function, tracking busy state and capturing errors. */
-  run: <T>(fn: () => Promise<T>) => Promise<T | undefined>
+  run: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
   /** Manually set or clear the error. */
-  setError: (message: string | null) => void
+  setError: (message: string | null) => void;
 }
 
 /**
@@ -18,19 +18,19 @@ interface AsyncState {
  * @returns Async state plus a `run` wrapper that captures thrown errors.
  */
 export function useAsync(): AsyncState {
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const run = useCallback(async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
     try {
-      return await fn()
+      return await fn();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Unexpected error')
-      return undefined
+      setError(caught instanceof Error ? caught.message : 'Unexpected error');
+      return undefined;
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }, [])
-  return { error, busy, run, setError }
+  }, []);
+  return { error, busy, run, setError };
 }

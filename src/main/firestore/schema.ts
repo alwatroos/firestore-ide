@@ -1,7 +1,7 @@
-import type { CollectionSchema, DatabaseSchema, FieldSchema } from '@shared/types/schema'
-import { markerKind } from '@shared/utils/markers'
-import { requireConnection } from '../connections/store'
-import { listCollections, listDocuments } from './service'
+import type { CollectionSchema, DatabaseSchema, FieldSchema } from '@shared/types/schema';
+import { markerKind } from '@shared/utils/markers';
+import { requireConnection } from '../connections/store';
+import { listCollections, listDocuments } from './service';
 
 /**
  * Classify a plain value into a coarse schema type label.
@@ -10,11 +10,11 @@ import { listCollections, listDocuments } from './service'
  * @returns A type label such as `string`, `array`, `timestamp` or `reference`.
  */
 export function valueType(value: unknown): string {
-  if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
-  const kind = markerKind(value)
-  if (kind) return kind
-  return typeof value
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  const kind = markerKind(value);
+  if (kind) return kind;
+  return typeof value;
 }
 
 /**
@@ -29,10 +29,10 @@ function collectFields(
   acc: Map<string, { types: Set<string>; occurrences: number }>
 ): void {
   for (const [key, value] of Object.entries(sample)) {
-    const entry = acc.get(key) ?? { types: new Set<string>(), occurrences: 0 }
-    entry.types.add(valueType(value))
-    entry.occurrences += 1
-    acc.set(key, entry)
+    const entry = acc.get(key) ?? { types: new Set<string>(), occurrences: 0 };
+    entry.types.add(valueType(value));
+    entry.occurrences += 1;
+    acc.set(key, entry);
   }
 }
 
@@ -43,13 +43,13 @@ function collectFields(
  * @returns One {@link FieldSchema} per observed field.
  */
 export function inferFields(samples: Record<string, unknown>[]): FieldSchema[] {
-  const acc = new Map<string, { types: Set<string>; occurrences: number }>()
-  for (const sample of samples) collectFields(sample, acc)
+  const acc = new Map<string, { types: Set<string>; occurrences: number }>();
+  for (const sample of samples) collectFields(sample, acc);
   return [...acc].map(([name, info]) => ({
     name,
     types: [...info.types],
     occurrences: info.occurrences,
-  }))
+  }));
 }
 
 /**
@@ -65,8 +65,8 @@ async function inferCollectionSchema(
   path: string,
   sampleSize: number
 ): Promise<CollectionSchema> {
-  const docs = await listDocuments(connectionId, path, sampleSize)
-  return { path, sampleSize: docs.length, fields: inferFields(docs.map((d) => d.data)) }
+  const docs = await listDocuments(connectionId, path, sampleSize);
+  return { path, sampleSize: docs.length, fields: inferFields(docs.map((d) => d.data)) };
 }
 
 /**
@@ -80,10 +80,10 @@ export async function inferSchema(
   connectionId: string,
   sampleSize: number
 ): Promise<DatabaseSchema> {
-  const { projectId } = await requireConnection(connectionId)
-  const names = await listCollections(connectionId)
+  const { projectId } = await requireConnection(connectionId);
+  const names = await listCollections(connectionId);
   const collections = await Promise.all(
     names.map((name) => inferCollectionSchema(connectionId, name, sampleSize))
-  )
-  return { projectId, collections }
+  );
+  return { projectId, collections };
 }

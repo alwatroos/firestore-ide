@@ -1,17 +1,17 @@
-import { useAtom } from 'jotai'
-import type { ReactNode } from 'react'
-import { QueryHistoryPanel } from '../queries/QueryHistoryPanel'
-import { activeTabAtom, type ExplorerTab } from './atoms'
-import { CostBar } from './CostBar'
-import { DocumentTable } from './DocumentTable'
-import { QueryEditor } from './QueryEditor'
+import { useAtom } from 'jotai';
+import type { ReactNode } from 'react';
+import { QueryHistoryPanel } from '../queries/QueryHistoryPanel';
+import { activeTabAtom, type ExplorerTab } from './atoms';
+import { CostBar } from './CostBar';
+import { DocumentTable } from './DocumentTable';
+import { QueryEditor } from './QueryEditor';
 
 /** Props for {@link TabButton}. */
 interface TabButtonProps {
-  id: ExplorerTab
-  label: string
-  active: ExplorerTab
-  onClick: (id: ExplorerTab) => void
+  id: ExplorerTab;
+  label: string;
+  active: ExplorerTab;
+  onClick: (id: ExplorerTab) => void;
 }
 
 /**
@@ -21,7 +21,7 @@ interface TabButtonProps {
  * @returns The rendered tab button.
  */
 function TabButton({ id, label, active, onClick }: TabButtonProps): ReactNode {
-  const isActive = active === id
+  const isActive = active === id;
   return (
     <button
       type="button"
@@ -34,7 +34,7 @@ function TabButton({ id, label, active, onClick }: TabButtonProps): ReactNode {
     >
       {label}
     </button>
-  )
+  );
 }
 
 /**
@@ -47,8 +47,8 @@ function TabBar({
   active,
   onChange,
 }: {
-  active: ExplorerTab
-  onChange: (t: ExplorerTab) => void
+  active: ExplorerTab;
+  onChange: (t: ExplorerTab) => void;
 }): ReactNode {
   return (
     <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950">
@@ -56,7 +56,7 @@ function TabBar({
       <TabButton id="query" label="Query" active={active} onClick={onChange} />
       <TabButton id="history" label="History" active={active} onClick={onChange} />
     </div>
-  )
+  );
 }
 
 /**
@@ -66,9 +66,9 @@ function TabBar({
  * @returns The matching panel.
  */
 function TabPanel({ tab }: { tab: ExplorerTab }): ReactNode {
-  if (tab === 'browse') return <DocumentTable />
-  if (tab === 'query') return <QueryEditor />
-  return <QueryHistoryPanel />
+  if (tab === 'browse') return <DocumentTable />;
+  if (tab === 'query') return <QueryEditor />;
+  return <QueryHistoryPanel />;
 }
 
 /**
@@ -77,7 +77,7 @@ function TabPanel({ tab }: { tab: ExplorerTab }): ReactNode {
  * @returns The rendered explorer pane.
  */
 export function ExplorerPane(): ReactNode {
-  const [activeTab, setActiveTab] = useAtom(activeTabAtom)
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <TabBar active={activeTab} onChange={setActiveTab} />
@@ -86,5 +86,5 @@ export function ExplorerPane(): ReactNode {
       </div>
       <CostBar />
     </div>
-  )
+  );
 }

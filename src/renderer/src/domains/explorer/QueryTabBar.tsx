@@ -1,22 +1,22 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useRef, useState } from 'react'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { type ReactNode, useRef, useState } from 'react';
 import {
   activeQueryTabIdAtom,
   addQueryTabAtom,
   closeQueryTabAtom,
   queryTabsAtom,
   renameQueryTabAtom,
-} from './atoms'
+} from './atoms';
 
 /** Props for {@link TabItem}. */
 interface TabItemProps {
-  id: string
-  label: string
-  isActive: boolean
-  isOnly: boolean
-  onActivate: () => void
-  onClose: () => void
-  onRename: (label: string) => void
+  id: string;
+  label: string;
+  isActive: boolean;
+  isOnly: boolean;
+  onActivate: () => void;
+  onClose: () => void;
+  onRename: (label: string) => void;
 }
 
 /**
@@ -34,20 +34,20 @@ function TabItem({
   onClose,
   onRename,
 }: TabItemProps): ReactNode {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function startEdit(e: React.MouseEvent) {
-    e.stopPropagation()
-    setDraft(label)
-    setEditing(true)
-    setTimeout(() => inputRef.current?.select(), 0)
+    e.stopPropagation();
+    setDraft(label);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
   }
 
   function commit() {
-    if (draft.trim()) onRename(draft.trim())
-    setEditing(false)
+    if (draft.trim()) onRename(draft.trim());
+    setEditing(false);
   }
 
   return (
@@ -67,8 +67,8 @@ function TabItem({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') commit()
-            if (e.key === 'Escape') setEditing(false)
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setEditing(false);
           }}
           onClick={(e) => e.stopPropagation()}
         />
@@ -80,8 +80,8 @@ function TabItem({
       <button
         type="button"
         onClick={(e) => {
-          e.stopPropagation()
-          onClose()
+          e.stopPropagation();
+          onClose();
         }}
         disabled={isOnly}
         className="flex h-4 w-4 items-center justify-center rounded text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-0 disabled:pointer-events-none"
@@ -91,7 +91,7 @@ function TabItem({
         ×
       </button>
     </div>
-  )
+  );
 }
 
 /**
@@ -101,11 +101,11 @@ function TabItem({
  * @returns The rendered tab bar.
  */
 export function QueryTabBar(): ReactNode {
-  const tabs = useAtomValue(queryTabsAtom)
-  const [activeId, setActiveId] = useAtom(activeQueryTabIdAtom)
-  const addTab = useSetAtom(addQueryTabAtom)
-  const closeTab = useSetAtom(closeQueryTabAtom)
-  const renameTab = useSetAtom(renameQueryTabAtom)
+  const tabs = useAtomValue(queryTabsAtom);
+  const [activeId, setActiveId] = useAtom(activeQueryTabIdAtom);
+  const addTab = useSetAtom(addQueryTabAtom);
+  const closeTab = useSetAtom(closeQueryTabAtom);
+  const renameTab = useSetAtom(renameQueryTabAtom);
 
   return (
     <div className="flex shrink-0 items-stretch border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 overflow-x-auto">
@@ -131,5 +131,5 @@ export function QueryTabBar(): ReactNode {
         +
       </button>
     </div>
-  )
+  );
 }

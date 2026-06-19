@@ -7,35 +7,35 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-} from 'react'
+} from 'react';
 
 /** Props for a horizontal (left/right) split. */
 interface HorizontalProps {
-  direction?: 'horizontal'
+  direction?: 'horizontal';
   /** Content rendered in the left panel. */
-  left: ReactNode
+  left: ReactNode;
   /** Content rendered in the right panel. */
-  right: ReactNode
+  right: ReactNode;
   /** Initial pixel width of the left panel; defaults to 50% of the container. */
-  initialLeftWidth?: number
+  initialLeftWidth?: number;
   /** Minimum pixel width for either panel. @default 160 */
-  minWidth?: number
+  minWidth?: number;
 }
 
 /** Props for a vertical (top/bottom) split. */
 interface VerticalProps {
-  direction: 'vertical'
+  direction: 'vertical';
   /** Content rendered in the top panel. */
-  top: ReactNode
+  top: ReactNode;
   /** Content rendered in the bottom panel. */
-  bottom: ReactNode
+  bottom: ReactNode;
   /** Initial pixel height of the top panel; defaults to 65% of the container. */
-  initialTopHeight?: number
+  initialTopHeight?: number;
   /** Minimum pixel height for either panel. @default 80 */
-  minHeight?: number
+  minHeight?: number;
 }
 
-type Props = HorizontalProps | VerticalProps
+type Props = HorizontalProps | VerticalProps;
 
 /**
  * Register global mousemove/mouseup handlers for horizontal drag resize.
@@ -53,19 +53,19 @@ function registerHDrag(
   setSize: (s: number) => void
 ): () => void {
   const onMove = (e: MouseEvent) => {
-    if (!dragging.current || !containerRef.current) return
-    const { left, width } = containerRef.current.getBoundingClientRect()
-    setSize(Math.max(minSize, Math.min(e.clientX - left, width - minSize)))
-  }
+    if (!dragging.current || !containerRef.current) return;
+    const { left, width } = containerRef.current.getBoundingClientRect();
+    setSize(Math.max(minSize, Math.min(e.clientX - left, width - minSize)));
+  };
   const onUp = () => {
-    dragging.current = false
-  }
-  window.addEventListener('mousemove', onMove)
-  window.addEventListener('mouseup', onUp)
+    dragging.current = false;
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
   return () => {
-    window.removeEventListener('mousemove', onMove)
-    window.removeEventListener('mouseup', onUp)
-  }
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  };
 }
 
 /**
@@ -84,19 +84,19 @@ function registerVDrag(
   setSize: (s: number) => void
 ): () => void {
   const onMove = (e: MouseEvent) => {
-    if (!dragging.current || !containerRef.current) return
-    const { top, height } = containerRef.current.getBoundingClientRect()
-    setSize(Math.max(minSize, Math.min(e.clientY - top, height - minSize)))
-  }
+    if (!dragging.current || !containerRef.current) return;
+    const { top, height } = containerRef.current.getBoundingClientRect();
+    setSize(Math.max(minSize, Math.min(e.clientY - top, height - minSize)));
+  };
   const onUp = () => {
-    dragging.current = false
-  }
-  window.addEventListener('mousemove', onMove)
-  window.addEventListener('mouseup', onUp)
+    dragging.current = false;
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
   return () => {
-    window.removeEventListener('mousemove', onMove)
-    window.removeEventListener('mouseup', onUp)
-  }
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  };
 }
 
 /**
@@ -114,17 +114,17 @@ function useDragResize(
   minSize: number,
   setSize: (s: number) => void
 ): () => void {
-  const dragging = useRef(false)
+  const dragging = useRef(false);
   useEffect(
     () =>
       direction === 'horizontal'
         ? registerHDrag(containerRef, dragging, minSize, setSize)
         : registerVDrag(containerRef, dragging, minSize, setSize),
     [containerRef, direction, minSize, setSize]
-  )
+  );
   return useCallback(() => {
-    dragging.current = true
-  }, [])
+    dragging.current = true;
+  }, []);
 }
 
 /**
@@ -135,31 +135,31 @@ function useDragResize(
  * @returns The rendered split container.
  */
 export function ResizableSplit(props: Props): ReactNode {
-  const direction = props.direction ?? 'horizontal'
+  const direction = props.direction ?? 'horizontal';
   const minSize =
     direction === 'vertical'
       ? ((props as VerticalProps).minHeight ?? 80)
-      : ((props as HorizontalProps).minWidth ?? 160)
+      : ((props as HorizontalProps).minWidth ?? 160);
   const initialSize =
     direction === 'vertical'
       ? (props as VerticalProps).initialTopHeight
-      : (props as HorizontalProps).initialLeftWidth
+      : (props as HorizontalProps).initialLeftWidth;
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState(0)
-  const startDrag = useDragResize(containerRef, direction, minSize, setSize)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState(0);
+  const startDrag = useDragResize(containerRef, direction, minSize, setSize);
 
   useLayoutEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current) return;
     const containerSize =
       direction === 'vertical'
         ? containerRef.current.offsetHeight
-        : containerRef.current.offsetWidth
-    setSize(initialSize ?? containerSize * (direction === 'vertical' ? 0.65 : 0.5))
-  }, [direction, initialSize])
+        : containerRef.current.offsetWidth;
+    setSize(initialSize ?? containerSize * (direction === 'vertical' ? 0.65 : 0.5));
+  }, [direction, initialSize]);
 
   if (direction === 'vertical') {
-    const { top, bottom } = props as VerticalProps
+    const { top, bottom } = props as VerticalProps;
     return (
       <div ref={containerRef} className="flex min-h-0 flex-1 min-w-0 flex-col select-none">
         <div style={{ height: size, minHeight: 0 }} className="flex flex-col overflow-hidden">
@@ -171,10 +171,10 @@ export function ResizableSplit(props: Props): ReactNode {
         />
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{bottom}</div>
       </div>
-    )
+    );
   }
 
-  const { left, right } = props as HorizontalProps
+  const { left, right } = props as HorizontalProps;
   return (
     <div ref={containerRef} className="flex min-h-0 flex-1 min-w-0 select-none">
       <div style={{ width: size, minWidth: 0 }} className="overflow-hidden">
@@ -186,5 +186,5 @@ export function ResizableSplit(props: Props): ReactNode {
       />
       <div className="min-w-0 flex-1 overflow-hidden">{right}</div>
     </div>
-  )
+  );
 }

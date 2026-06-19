@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Firestore IDE</title>
+  <defs>
+    <!-- Blue gradient spanning the flame height, bottom → top -->
+    <linearGradient id="flame-grad" x1="256" y1="396" x2="256" y2="105"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1E3A8A"/>
+      <stop offset="35%"  stop-color="#2563EB"/>
+      <stop offset="70%"  stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#BAE6FD"/>
+    </linearGradient>
+
+    <!-- Clip: six pill-shaped rows forming a flame silhouette -->
+    <clipPath id="flame-clip">
+      <!-- row 6 — base -->
+      <rect x="137" y="360" width="238" height="36" rx="18"/>
+      <!-- row 5 — belly (widest) -->
+      <rect x="124" y="309" width="264" height="36" rx="18"/>
+      <!-- row 4 -->
+      <rect x="146" y="258" width="220" height="36" rx="18"/>
+      <!-- row 3 -->
+      <rect x="175" y="207" width="162" height="36" rx="18"/>
+      <!-- row 2 -->
+      <rect x="206" y="156" width="100" height="36" rx="18"/>
+      <!-- row 1 — tip -->
+      <rect x="232" y="105" width="48" height="36" rx="18"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background: dark slate rounded square -->
+  <rect width="512" height="512" rx="96" fill="#0F172A"/>
+
+  <!-- Flame: gradient rectangle revealed through the clip -->
+  <rect width="512" height="512" fill="url(#flame-grad)" clip-path="url(#flame-clip)"/>
+</svg>

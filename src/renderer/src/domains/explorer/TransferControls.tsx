@@ -1,19 +1,19 @@
-import type { ImportMode } from '@shared/types/transfer'
-import { useAtomValue, useSetAtom } from 'jotai'
-import { type ReactNode, useState } from 'react'
-import { Button, ConfirmDialog, ErrorBanner } from '../../components/ui'
-import { activeConnectionAtom } from '../connections/atoms'
-import { useReadOnly } from '../connections/hooks'
-import { documentsAtom, documentsVersionAtom, selectedCollectionAtom } from './atoms'
-import { type ParsedBackup, type ParsedImport, useTransfer } from './useTransfer'
+import type { ImportMode } from '@shared/types/transfer';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { type ReactNode, useState } from 'react';
+import { Button, ConfirmDialog, ErrorBanner } from '../../components/ui';
+import { activeConnectionAtom } from '../connections/atoms';
+import { useReadOnly } from '../connections/hooks';
+import { documentsAtom, documentsVersionAtom, selectedCollectionAtom } from './atoms';
+import { type ParsedBackup, type ParsedImport, useTransfer } from './useTransfer';
 
 /** A small overwrite/merge selector shared by the import and restore dialogs. */
 function ModePicker({
   mode,
   onChange,
 }: {
-  mode: ImportMode
-  onChange: (m: ImportMode) => void
+  mode: ImportMode;
+  onChange: (m: ImportMode) => void;
 }): ReactNode {
   return (
     <div className="mt-2 flex gap-3 text-sm">
@@ -24,7 +24,7 @@ function ModePicker({
         </label>
       ))}
     </div>
-  )
+  );
 }
 
 /**
@@ -35,35 +35,35 @@ function ModePicker({
  * @returns The rendered controls, or `null` when no collection is selected.
  */
 export function TransferControls(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const collection = useAtomValue(selectedCollectionAtom)
-  const documents = useAtomValue(documentsAtom)
-  const bumpVersion = useSetAtom(documentsVersionAtom)
-  const readOnly = useReadOnly()
+  const active = useAtomValue(activeConnectionAtom);
+  const collection = useAtomValue(selectedCollectionAtom);
+  const documents = useAtomValue(documentsAtom);
+  const bumpVersion = useSetAtom(documentsVersionAtom);
+  const readOnly = useReadOnly();
   const { exportRecords, backup, pickImport, runImport, pickRestore, runRestore, error, busy } =
-    useTransfer(active?.id ?? null)
-  const [pendingImport, setPendingImport] = useState<ParsedImport | null>(null)
-  const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null)
-  const [mode, setMode] = useState<ImportMode>('overwrite')
+    useTransfer(active?.id ?? null);
+  const [pendingImport, setPendingImport] = useState<ParsedImport | null>(null);
+  const [pendingRestore, setPendingRestore] = useState<ParsedBackup | null>(null);
+  const [mode, setMode] = useState<ImportMode>('overwrite');
 
-  if (!collection) return null
-  const base = collection.replace(/\//g, '_')
+  if (!collection) return null;
+  const base = collection.replace(/\//g, '_');
 
   /** Pick an import file and open the confirmation dialog when one is parsed. */
   async function onImport(): Promise<void> {
-    const parsed = await pickImport()
+    const parsed = await pickImport();
     if (parsed) {
-      setMode('overwrite')
-      setPendingImport(parsed)
+      setMode('overwrite');
+      setPendingImport(parsed);
     }
   }
 
   /** Pick a backup file and open the restore confirmation when one is parsed. */
   async function onRestore(): Promise<void> {
-    const parsed = await pickRestore()
+    const parsed = await pickRestore();
     if (parsed) {
-      setMode('overwrite')
-      setPendingRestore(parsed)
+      setMode('overwrite');
+      setPendingRestore(parsed);
     }
   }
 
@@ -102,9 +102,9 @@ export function TransferControls(): ReactNode {
           onCancel={() => setPendingImport(null)}
           onConfirm={() => {
             void runImport(collection, pendingImport.docs, mode)?.then(() => {
-              setPendingImport(null)
-              bumpVersion((value) => value + 1)
-            })
+              setPendingImport(null);
+              bumpVersion((value) => value + 1);
+            });
           }}
         >
           <p>
@@ -124,9 +124,9 @@ export function TransferControls(): ReactNode {
           onCancel={() => setPendingRestore(null)}
           onConfirm={() => {
             void runRestore(pendingRestore.backup, mode)?.then(() => {
-              setPendingRestore(null)
-              bumpVersion((value) => value + 1)
-            })
+              setPendingRestore(null);
+              bumpVersion((value) => value + 1);
+            });
           }}
         >
           <p>
@@ -138,5 +138,5 @@ export function TransferControls(): ReactNode {
         </ConfirmDialog>
       )}
     </div>
-  )
+  );
 }

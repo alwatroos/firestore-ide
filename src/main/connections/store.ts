@@ -1,6 +1,6 @@
-import type { StoredConnection } from '@shared/types/connection'
-import { readJson, writeJson } from '../core/jsonFile'
-import { connectionsFile } from '../core/paths'
+import type { StoredConnection } from '@shared/types/connection';
+import { readJson, writeJson } from '../core/jsonFile';
+import { connectionsFile } from '../core/paths';
 
 /**
  * Load all persisted connections from disk.
@@ -8,7 +8,7 @@ import { connectionsFile } from '../core/paths'
  * @returns The stored connections, or an empty list when none exist.
  */
 export async function loadConnections(): Promise<StoredConnection[]> {
-  return readJson<StoredConnection[]>(connectionsFile(), [])
+  return readJson<StoredConnection[]>(connectionsFile(), []);
 }
 
 /**
@@ -18,7 +18,7 @@ export async function loadConnections(): Promise<StoredConnection[]> {
  * @returns Resolves once written to disk.
  */
 export async function persistConnections(connections: StoredConnection[]): Promise<void> {
-  await writeJson(connectionsFile(), connections)
+  await writeJson(connectionsFile(), connections);
 }
 
 /**
@@ -29,7 +29,7 @@ export async function persistConnections(connections: StoredConnection[]): Promi
  * @throws If no connection with the given id exists.
  */
 export async function requireConnection(id: string): Promise<StoredConnection> {
-  const found = (await loadConnections()).find((c) => c.id === id)
-  if (!found) throw new Error(`Connection not found: ${id}`)
-  return found
+  const found = (await loadConnections()).find((c) => c.id === id);
+  if (!found) throw new Error(`Connection not found: ${id}`);
+  return found;
 }

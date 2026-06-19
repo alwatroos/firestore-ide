@@ -1,5 +1,5 @@
-import type { DocumentRecord } from '@shared/types/firestore'
-import { formatMarker, markerKind } from '@shared/utils/markers'
+import type { DocumentRecord } from '@shared/types/firestore';
+import { formatMarker, markerKind } from '@shared/utils/markers';
 
 /**
  * Collect a bounded, stable set of column keys across the given documents.
@@ -9,11 +9,11 @@ import { formatMarker, markerKind } from '@shared/utils/markers'
  * @returns Ordered, de-duplicated field names.
  */
 export function collectColumns(docs: DocumentRecord[], max = 8): string[] {
-  const keys = new Set<string>()
+  const keys = new Set<string>();
   for (const doc of docs) {
-    for (const key of Object.keys(doc.data)) keys.add(key)
+    for (const key of Object.keys(doc.data)) keys.add(key);
   }
-  return [...keys].slice(0, max)
+  return [...keys].slice(0, max);
 }
 
 /**
@@ -23,11 +23,11 @@ export function collectColumns(docs: DocumentRecord[], max = 8): string[] {
  * @returns A display string (objects are JSON-stringified).
  */
 export function formatCell(value: unknown): string {
-  if (value === null || value === undefined) return ''
+  if (value === null || value === undefined) return '';
   if (typeof value === 'object') {
-    const kind = markerKind(value)
-    if (kind) return formatMarker(value as Record<string, unknown>, kind)
-    return JSON.stringify(value)
+    const kind = markerKind(value);
+    if (kind) return formatMarker(value as Record<string, unknown>, kind);
+    return JSON.stringify(value);
   }
-  return String(value)
+  return String(value);
 }

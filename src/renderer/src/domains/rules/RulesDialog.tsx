@@ -1,15 +1,15 @@
-import type { SecurityRules } from '@shared/types/rules'
-import { type ReactNode, useEffect, useState } from 'react'
-import { Button, ErrorBanner } from '../../components/ui'
-import { api, unwrap } from '../../lib/api'
-import { useAsync } from '../../lib/useAsync'
+import type { SecurityRules } from '@shared/types/rules';
+import { type ReactNode, useEffect, useState } from 'react';
+import { Button, ErrorBanner } from '../../components/ui';
+import { api, unwrap } from '../../lib/api';
+import { useAsync } from '../../lib/useAsync';
 
 /** Props for {@link RulesDialog}. */
 interface RulesDialogProps {
   /** Connection whose project rules to show, or `null` when none is selected. */
-  connectionId: string | null
+  connectionId: string | null;
   /** Dismiss handler. */
-  onClose: () => void
+  onClose: () => void;
 }
 
 /**
@@ -20,13 +20,13 @@ interface RulesDialogProps {
  * @returns The rendered dialog.
  */
 export function RulesDialog({ connectionId, onClose }: RulesDialogProps): ReactNode {
-  const { error, busy, run } = useAsync()
-  const [rules, setRules] = useState<SecurityRules | null>(null)
+  const { error, busy, run } = useAsync();
+  const [rules, setRules] = useState<SecurityRules | null>(null);
 
   useEffect(() => {
-    if (!connectionId) return
-    void run(async () => setRules(await unwrap(api.getActiveRules(connectionId))))
-  }, [connectionId, run])
+    if (!connectionId) return;
+    void run(async () => setRules(await unwrap(api.getActiveRules(connectionId))));
+  }, [connectionId, run]);
 
   return (
     <div
@@ -53,5 +53,5 @@ export function RulesDialog({ connectionId, onClose }: RulesDialogProps): ReactN
         )}
       </div>
     </div>
-  )
+  );
 }

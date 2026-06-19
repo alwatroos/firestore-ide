@@ -1,34 +1,34 @@
-import { useAtom, useAtomValue } from 'jotai'
-import { type ReactNode, useState } from 'react'
-import { Empty, ErrorBanner } from '../../components/ui'
-import { api, unwrap } from '../../lib/api'
-import { useAsync } from '../../lib/useAsync'
-import { activeConnectionAtom } from '../connections/atoms'
-import { useOpenDocument } from '../documents/hooks'
-import { selectedCollectionAtom } from './atoms'
-import { useCollections } from './hooks'
+import { useAtom, useAtomValue } from 'jotai';
+import { type ReactNode, useState } from 'react';
+import { Empty, ErrorBanner } from '../../components/ui';
+import { api, unwrap } from '../../lib/api';
+import { useAsync } from '../../lib/useAsync';
+import { activeConnectionAtom } from '../connections/atoms';
+import { useOpenDocument } from '../documents/hooks';
+import { selectedCollectionAtom } from './atoms';
+import { useCollections } from './hooks';
 
 /** Max document nodes loaded per collection in the tree (the table shows the full set). */
-const TREE_DOC_LIMIT = 25
+const TREE_DOC_LIMIT = 25;
 
 /** A single node in the data tree. */
 interface NodeData {
   /** Whether this node is a collection or a document. */
-  kind: 'collection' | 'document'
+  kind: 'collection' | 'document';
   /** Full Firestore path of the node. */
-  path: string
+  path: string;
   /** Short label (collection id or document id). */
-  label: string
+  label: string;
 }
 
 /** Props for {@link TreeNode}. */
 interface TreeNodeProps {
   /** Active connection id. */
-  connectionId: string
+  connectionId: string;
   /** The node to render. */
-  node: NodeData
+  node: NodeData;
   /** Indentation depth. */
-  depth: number
+  depth: number;
 }
 
 /**
@@ -39,11 +39,11 @@ interface TreeNodeProps {
  * @returns The rendered node and, when expanded, its children.
  */
 function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
-  const [expanded, setExpanded] = useState(false)
-  const [children, setChildren] = useState<NodeData[] | null>(null)
-  const { error, busy, run } = useAsync()
-  const [selectedCollection, setSelectedCollection] = useAtom(selectedCollectionAtom)
-  const { open } = useOpenDocument(connectionId)
+  const [expanded, setExpanded] = useState(false);
+  const [children, setChildren] = useState<NodeData[] | null>(null);
+  const { error, busy, run } = useAsync();
+  const [selectedCollection, setSelectedCollection] = useAtom(selectedCollectionAtom);
+  const { open } = useOpenDocument(connectionId);
 
   /**
    * Fetch the node's children (documents for a collection, sub-collections for a document).
@@ -53,15 +53,15 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
   function loadChildren(): Promise<unknown> {
     return run(async () => {
       if (node.kind === 'collection') {
-        const docs = await unwrap(api.listDocuments(connectionId, node.path, TREE_DOC_LIMIT))
-        setChildren(docs.map((doc) => ({ kind: 'document', path: doc.path, label: doc.id })))
+        const docs = await unwrap(api.listDocuments(connectionId, node.path, TREE_DOC_LIMIT));
+        setChildren(docs.map((doc) => ({ kind: 'document', path: doc.path, label: doc.id })));
       } else {
-        const cols = await unwrap(api.listCollections(connectionId, node.path))
+        const cols = await unwrap(api.listCollections(connectionId, node.path));
         setChildren(
           cols.map((name) => ({ kind: 'collection', path: `${node.path}/${name}`, label: name }))
-        )
+        );
       }
-    })
+    });
   }
 
   /**
@@ -70,9 +70,9 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
    * @returns Nothing.
    */
   function toggle(): void {
-    const next = !expanded
-    setExpanded(next)
-    if (next && children === null) void loadChildren()
+    const next = !expanded;
+    setExpanded(next);
+    if (next && children === null) void loadChildren();
   }
 
   /**
@@ -81,12 +81,12 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
    * @returns Nothing.
    */
   function select(): void {
-    if (node.kind === 'collection') setSelectedCollection(node.path)
-    else void open(node.path)
+    if (node.kind === 'collection') setSelectedCollection(node.path);
+    else void open(node.path);
   }
 
-  const isSelected = node.kind === 'collection' && node.path === selectedCollection
-  const icon = node.kind === 'collection' ? '📁' : '📄'
+  const isSelected = node.kind === 'collection' && node.path === selectedCollection;
+  const icon = node.kind === 'collection' ? '📁' : '📄';
   return (
     <li>
       <div
@@ -137,7 +137,7 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
         </ul>
       )}
     </li>
-  )
+  );
 }
 
 /**
@@ -147,10 +147,10 @@ function TreeNode({ connectionId, node, depth }: TreeNodeProps): ReactNode {
  * @returns The rendered tree or an empty-state placeholder.
  */
 export function CollectionTree(): ReactNode {
-  const active = useAtomValue(activeConnectionAtom)
-  const { collections, error } = useCollections(active?.id ?? null)
-  if (!active) return <Empty text="Select a connection above" />
-  if (collections.length === 0) return <Empty text="No collections found" />
+  const active = useAtomValue(activeConnectionAtom);
+  const { collections, error } = useCollections(active?.id ?? null);
+  if (!active) return <Empty text="Select a connection above" />;
+  if (collections.length === 0) return <Empty text="No collections found" />;
   return (
     <>
       <ErrorBanner message={error} />
@@ -165,5 +165,5 @@ export function CollectionTree(): ReactNode {
         ))}
       </ul>
     </>
-  )
+  );
 }

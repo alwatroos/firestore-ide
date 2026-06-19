@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
-import { AddConnectionForm } from '../domains/connections/AddConnectionForm'
-import { ConnectionList } from '../domains/connections/ConnectionList'
-import { CollectionTree } from '../domains/explorer/CollectionTree'
-import { Button } from './ui'
+import type { ReactNode } from 'react';
+import { AddConnectionForm } from '../domains/connections/AddConnectionForm';
+import { ConnectionList } from '../domains/connections/ConnectionList';
+import { CollectionTree } from '../domains/explorer/CollectionTree';
+import { Button } from './ui';
 
 /**
  * A titled sidebar section wrapper.
@@ -18,7 +18,7 @@ function Section({ title, children }: { title: string; children: ReactNode }): R
       </h2>
       {children}
     </section>
-  )
+  );
 }
 
 /**
@@ -33,9 +33,9 @@ export function Sidebar({
   onOpenRules,
   onToggle,
 }: {
-  onOpenSettings: () => void
-  onOpenRules: () => void
-  onToggle: () => void
+  onOpenSettings: () => void;
+  onOpenRules: () => void;
+  onToggle: () => void;
 }): ReactNode {
   return (
     <aside className="flex h-full w-full flex-col border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
@@ -73,5 +73,5 @@ export function Sidebar({
         </Section>
       </div>
     </aside>
-  )
+  );
 }

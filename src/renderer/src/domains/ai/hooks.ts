@@ -1,9 +1,9 @@
-import type { GeneratedQuery, GenerateQueryInput } from '@shared/types/ollama'
-import { useAtom } from 'jotai'
-import { useCallback, useEffect } from 'react'
-import { api, unwrap } from '../../lib/api'
-import { useAsync } from '../../lib/useAsync'
-import { modelsAtom, selectedModelAtom } from './atoms'
+import type { GeneratedQuery, GenerateQueryInput } from '@shared/types/ollama';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect } from 'react';
+import { api, unwrap } from '../../lib/api';
+import { useAsync } from '../../lib/useAsync';
+import { modelsAtom, selectedModelAtom } from './atoms';
 
 /**
  * Load the model list from a host and default the selection.
@@ -12,18 +12,18 @@ import { modelsAtom, selectedModelAtom } from './atoms'
  * @returns Models, selection state and busy/error flags.
  */
 export function useModels(host: string) {
-  const [models, setModels] = useAtom(modelsAtom)
-  const [selected, setSelected] = useAtom(selectedModelAtom)
-  const { error, busy, run } = useAsync()
+  const [models, setModels] = useAtom(modelsAtom);
+  const [selected, setSelected] = useAtom(selectedModelAtom);
+  const { error, busy, run } = useAsync();
   const refresh = useCallback(
     () => run(async () => setModels(await unwrap(api.listModels(host)))),
     [host, run, setModels]
-  )
-  useEffect(() => void refresh(), [refresh])
+  );
+  useEffect(() => void refresh(), [refresh]);
   useEffect(() => {
-    if (!selected && models[0]) setSelected(models[0].name)
-  }, [models, selected, setSelected])
-  return { models, selected, setSelected, error, busy }
+    if (!selected && models[0]) setSelected(models[0].name);
+  }, [models, selected, setSelected]);
+  return { models, selected, setSelected, error, busy };
 }
 
 /**
@@ -32,13 +32,13 @@ export function useModels(host: string) {
  * @returns A `generate` action plus busy/error state.
  */
 export function useGenerate() {
-  const { error, busy, run } = useAsync()
+  const { error, busy, run } = useAsync();
   const generate = useCallback(
     (input: GenerateQueryInput): Promise<GeneratedQuery | undefined> =>
       run(() => unwrap(api.generateQuery(input))),
     [run]
-  )
-  return { generate, error, busy }
+  );
+  return { generate, error, busy };
 }
 
 /**
@@ -47,7 +47,7 @@ export function useGenerate() {
  * @returns A `generate` action that streams tokens, plus busy/error state.
  */
 export function useGenerateStream() {
-  const { error, busy, run } = useAsync()
+  const { error, busy, run } = useAsync();
   const generate = useCallback(
     (
       input: GenerateQueryInput,
@@ -60,17 +60,17 @@ export function useGenerateStream() {
               input,
               onChunk,
               (result) => {
-                cleanup()
-                resolve(result)
+                cleanup();
+                resolve(result);
               },
               (errMsg) => {
-                cleanup()
-                reject(new Error(errMsg))
+                cleanup();
+                reject(new Error(errMsg));
               }
-            )
+            );
           })
       ),
     [run]
-  )
-  return { generate, error, busy }
+  );
+  return { generate, error, busy };
 }

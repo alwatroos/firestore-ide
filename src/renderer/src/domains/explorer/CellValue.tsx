@@ -1,14 +1,14 @@
-import { FIELD_MARKERS } from '@shared/types/firestore'
-import { formatMarker, markerKind } from '@shared/utils/markers'
-import type { ReactNode } from 'react'
-import { formatCell } from './columns'
+import { FIELD_MARKERS } from '@shared/types/firestore';
+import { formatMarker, markerKind } from '@shared/utils/markers';
+import type { ReactNode } from 'react';
+import { formatCell } from './columns';
 
 /** Props for {@link CellValue}. */
 interface CellValueProps {
   /** The field value to render. */
-  value: unknown
+  value: unknown;
   /** When provided, `DocumentReference` values render as a clickable link. */
-  onOpenRef?: (path: string) => void
+  onOpenRef?: (path: string) => void;
 }
 
 /**
@@ -20,20 +20,20 @@ interface CellValueProps {
  */
 export function CellValue({ value, onOpenRef }: CellValueProps): ReactNode {
   if (value && typeof value === 'object' && markerKind(value) === 'reference' && onOpenRef) {
-    const record = value as Record<string, unknown>
-    const path = String(record[FIELD_MARKERS.reference])
+    const record = value as Record<string, unknown>;
+    const path = String(record[FIELD_MARKERS.reference]);
     return (
       <button
         type="button"
         className="text-blue-600 dark:text-blue-400 hover:underline"
         onClick={(event) => {
-          event.stopPropagation()
-          onOpenRef(path)
+          event.stopPropagation();
+          onOpenRef(path);
         }}
       >
         {formatMarker(record, 'reference')}
       </button>
-    )
+    );
   }
-  return <>{formatCell(value)}</>
+  return <>{formatCell(value)}</>;
 }
