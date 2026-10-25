@@ -89,7 +89,7 @@ jobs:
             artifacts: dist/*.AppImage
           - os: windows-latest
             artifacts: dist/*.exe
-          - os: macos-latest
+          - os: macos-15
             artifacts: dist/*.dmg
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -102,9 +102,9 @@ jobs:
         run: corepack enable
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -144,7 +144,7 @@ jobs:
       - plan
       - build
     if: ${{ needs.plan.outputs.publishing == 'true' }}
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 60
     environment: release
     permissions:
@@ -158,9 +158,9 @@ jobs:
         run: corepack enable
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -210,7 +210,7 @@ jobs:
         if: steps.sign.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
-          name: installers-macos-latest
+          name: installers-macos-15
           path: dist/*.dmg
           overwrite: true
           if-no-files-found: error
@@ -234,9 +234,9 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
 
       - name: Fetch the build artifacts
         uses: actions/download-artifact@v8
@@ -295,9 +295,9 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
 
       - name: Fetch the build artifacts
         uses: actions/download-artifact@v8
