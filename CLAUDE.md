@@ -186,6 +186,6 @@ detection) runs offline in the CI job `Release scripts`. Nothing in the app cons
 ### Required configuration
 
 - Environment `release` (ideally restricted to tags `v*`).
-- Secrets: `APPLE_CERTIFICATE` (base64 .p12), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_API_KEY` (base64 .p8),
-  `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`. Optional: `UPDATE_SIGNING_KEY` (signs `update.json`).
+- Secrets: `APPLE_CERTIFICATE_P12_BASE64` (base64 .p12), `APPLE_CERTIFICATE_PASSWORD`,
+  `APPLE_API_KEY_P8_BASE64` (base64 .p8), `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`. Optional: `UPDATE_SIGNING_KEY` (signs `update.json`).
 - Repository variable `ALLOW_UNSIGNED_FALLBACK` (optional).
