@@ -123,23 +123,20 @@ Release, and installers (`.AppImage` / `.exe` / `.dmg`) built by `release.yml`.
 
 ### Branch model
 
-Work happens on `develop` and reaches `main` through a pull request. The version in `package.json` is
-bumped in that PR; the release tag must match it.
+One branch: `main` (default, cannot be deleted or force-pushed). Work reaches it through pull requests; CI runs on
+every PR and every push to `main`.
 
-### Steps
+### Releasing (one step)
 
-1. Merge the `develop` → `main` PR (with the version bump in `package.json`).
-2. Wait for the CI **push** run on `main` to go green (`ci.yml` runs on pushes to `main`).
-3. Actions → **Release** → Run workflow on `main` (a dry run: builds unsigned installers on all three OSes).
-4. Actions → **Tag release** → Run workflow on `main` with `version` (`X.Y.Z`, no `v`), `sha` (empty means the head
-   of `main`) and `confirm` = `release vX.Y.Z`.
-5. Tag release validates, creates the tag through the API and dispatches `release.yml` on the tag. That run
-   builds, signs macOS, and creates the GitHub Release.
+Actions → **Tag release** → Run workflow on `main`, pick `bump` (`patch` by default, or `minor` / `major`), or type
+an exact `version`. The workflow:
 
-`tag-release-validate.sh` fails closed unless: it runs on `main`; the version is semver and equals `package.json`
-at the commit; the commit is on `main`; the tag does not exist; `release.yml` at the commit has the
-`# tag-dispatch:` marker; the latest Release dry run on `main` and a CI push run on `main` both succeeded for
-exactly that commit. Scripts live in `.github/scripts/` and are tested offline in the CI job `Release scripts`.
+1. runs Biome, typecheck and tests on the head of `main`,
+2. bumps `package.json`, commits `chore(release): vX.Y.Z` to `main` and pushes the tag `vX.Y.Z`,
+3. dispatches `release.yml` on the tag, which builds all three OSes, signs and notarises macOS, signs
+   `update.json` and creates the GitHub Release.
+
+CLI equivalent: `gh workflow run tag-release.yml --ref main -f bump=patch`.
 
 ### What publishes
 

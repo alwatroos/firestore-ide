@@ -1,31 +1,27 @@
 name: Tag release
 
-# Owner-triggered release tag. The OWNER runs this from Actions -> Tag release on `main`;
-# nobody else dispatches it. It validates (fail closed, `.github/scripts/tag-release-validate.sh`), creates the
-# lightweight tag `vX.Y.Z` through the API, then dispatches `release.yml` on that tag. A tag made with GITHUB_TOKEN does
-# not start the `push: tags` trigger of release.yml (GitHub blocks recursive triggers), but a dispatch does, and
-# release.yml publishes a dispatch on a `refs/tags/v*` ref like a tag push.
+# One-click release. The owner runs Actions -> Tag release on `main` and picks the bump (patch by default).
+# This workflow checks the head of main (lint, typecheck, tests), bumps the version in package.json, commits
+# "chore(release): vX.Y.Z" to main, pushes the tag `vX.Y.Z` and dispatches `release.yml` on that tag, which builds,
+# signs and notarises macOS, signs update.json and publishes the GitHub Release.
 #
-# Gate: a successful Release dry run (workflow_dispatch on main) and a successful CI push run, both on the exact
-# commit being tagged. Run the Release workflow on main first.
+# A push made with GITHUB_TOKEN does not start the `push: tags` trigger of release.yml (GitHub blocks recursive
+# triggers), so the tag run is started with a dispatch on the tag ref instead.
 #
 # Every input reaches a script through `env:` only; no expression is interpolated into a `run:` script.
 on:
   workflow_dispatch:
     inputs:
+      bump:
+        description: "Version bump"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
       version:
-        description: "Version without v, for example 1.0.0"
-        type: string
-        required: true
-      sha:
-        description: "Commit to tag (7-40 lowercase hex, on main). Empty means the head of main."
+        description: "Exact version instead of the bump, for example 1.0.0 (optional)"
         type: string
         required: false
         default: ""
-      confirm:
-        description: "Type exactly: release vX.Y.Z"
-        type: string
-        required: true
 
 permissions:
   contents: write
@@ -38,103 +34,73 @@ concurrency:
 jobs:
   tag:
     name: tag release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          persist-credentials: false
 
-      # Cheap checks (script, so they are testable offline) before any API call.
-      - name: Pre-check
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check
+        run: |
+          pnpm exec biome ci .
+          pnpm typecheck
+          pnpm test
+
+      - name: Bump version
+        id: bump
         shell: bash
         env:
+          BUMP: ${{ inputs.bump }}
           VERSION: ${{ inputs.version }}
-          CONFIRM: ${{ inputs.confirm }}
-          REF: ${{ github.ref }}
-        run: sh .github/scripts/tag-release-precheck.sh
-
-      - name: Validate
-        id: validate
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
-          SHA: ${{ inputs.sha }}
-          CONFIRM: ${{ inputs.confirm }}
-          REF: ${{ github.ref }}
-          MAIN_HEAD: ${{ github.sha }}
-          REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-        run: sh .github/scripts/tag-release-validate.sh
-
-      - name: Create tag
-        id: tag
-        shell: bash
-        env:
-          REPO: ${{ github.repository }}
-          TAG: ${{ steps.validate.outputs.tag }}
-          SHA: ${{ steps.validate.outputs.sha }}
-          GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method POST "repos/$REPO/git/refs" -f ref="refs/tags/$TAG" -f sha="$SHA"
-          echo "created=true" >>"$GITHUB_OUTPUT"
-
-      - name: Dispatch Release
-        id: dispatch
-        shell: bash
-        env:
-          REPO: ${{ github.repository }}
-          TAG: ${{ steps.validate.outputs.tag }}
-          SHA: ${{ steps.validate.outputs.sha }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh workflow run release.yml --repo "$REPO" --ref "$TAG"
-          echo "dispatched=true" >>"$GITHUB_OUTPUT"
-          # Find the new run; bounded, 12 x 5 s. Not finding it is not a failure: the tag exists and the run started.
-          i=0
-          while [ "$i" -lt 12 ]; do
-            i=$((i + 1))
-            sleep 5
-            found=$(gh run list --repo "$REPO" --workflow release.yml --event workflow_dispatch --branch "$TAG" --limit 1 --json url,headSha --jq '.[] | [.url,.headSha] | @tsv' || true)
-            # Accept only a run on the tagged commit (an older run of a deleted and recreated tag has another head sha).
-            if [ -n "$found" ] && [ "${found#*	}" = "$SHA" ]; then
-              printf 'run_url=%s\n' "${found%%	*}" >>"$GITHUB_OUTPUT"
-              break
-            fi
-          done
-
-      - name: Summary
-        if: always()
-        shell: bash
-        env:
-          REPO: ${{ github.repository }}
-          TAG: ${{ steps.validate.outputs.tag }}
-          SHA: ${{ steps.validate.outputs.sha }}
-          VALIDATE: ${{ steps.validate.outcome }}
-          CREATED: ${{ steps.tag.outputs.created }}
-          DISPATCHED: ${{ steps.dispatch.outputs.dispatched }}
-          RUN_URL: ${{ steps.dispatch.outputs.run_url }}
-        run: |
-          {
-            echo "## Tag release"
-            if [ "$VALIDATE" != "success" ]; then
-              echo "Validation did not pass (outcome: $VALIDATE). No tag was created. See the Validate step."
-            else
-              echo "- Tag: \`$TAG\`"
-              echo "- Commit: \`$SHA\`"
-              if [ "$CREATED" != "true" ]; then
-                echo "- The tag was NOT created."
-              elif [ "$DISPATCHED" != "true" ]; then
-                echo "- The tag was created but the Release dispatch failed. The owner runs: \`gh workflow run release.yml --ref $TAG\`, or deletes the tag and retries."
-              elif [ -n "$RUN_URL" ]; then
-                echo "- Release run: $RUN_URL"
-              else
-                echo "- Release run: https://github.com/$REPO/actions/workflows/release.yml (the new run was not found in 60 s)"
-                echo "::warning::The Release run was not found; check the Release workflow page"
-              fi
-            fi
-          } >>"$GITHUB_STEP_SUMMARY"
-          if [ "$CREATED" = "true" ] && [ "$DISPATCHED" != "true" ]; then
+          if [ -n "$VERSION" ]; then
+            printf '%s\n' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' ||
+              { echo "::error title=Version::'$VERSION' is not X.Y.Z[-pre]"; exit 1; }
+            target=$VERSION
+          else
+            target=$BUMP
+          fi
+          version=$(npm version "$target" --no-git-tag-version | sed 's/^v//')
+          tag="v$version"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "::error title=Version::the tag $tag already exists"
             exit 1
           fi
+          echo "tag=$tag" >>"$GITHUB_OUTPUT"
+
+      - name: Commit, tag and push
+        shell: bash
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): $TAG"
+          git tag "$TAG"
+          git push --atomic origin HEAD:main "refs/tags/$TAG"
+
+      - name: Dispatch Release
+        shell: bash
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$TAG"
+          {
+            echo "## Tag release $TAG"
+            echo "Release run: https://github.com/$GITHUB_REPOSITORY/actions/workflows/release.yml"
+          } >>"$GITHUB_STEP_SUMMARY"
