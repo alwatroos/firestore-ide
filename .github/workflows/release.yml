@@ -7,9 +7,8 @@ name: Release
 # - workflow_dispatch on a branch: the same dry run. It needs this file on the default branch.
 # - Tag `vX.Y.Z` (a tag push, or a workflow_dispatch on the tag ref): the full run, then `sign-macos` signs and
 #   notarises the macOS dmg when the APPLE_* secrets exist, and `host` creates the GitHub Release.
-# tag-dispatch: a workflow_dispatch on a refs/tags/v* ref publishes like a tag push.
-#   The "Tag release" workflow creates the tag with GITHUB_TOKEN, which does not trigger the tag push, so it
-#   dispatches this workflow on the tag instead. The tag is derived from GITHUB_REF in the `mode` step and checked
+#   A workflow_dispatch on a refs/tags/v* ref publishes like a tag push. "Tag release" pushes the tag with
+#   GITHUB_TOKEN, which does not trigger the tag push, so it dispatches this workflow on the tag instead. The tag is derived from GITHUB_REF in the `plan` step and checked
 #   against the version in package.json.
 # - `sign-macos` runs on `v*` tag runs only, in the environment `release`. It rebuilds the dmg with electron-builder's
 #   own signing (CSC_LINK / CSC_KEY_PASSWORD) and API-key notarisation, then replaces the macOS artifact.
