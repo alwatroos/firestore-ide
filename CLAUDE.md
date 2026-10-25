@@ -154,13 +154,38 @@ On a publishing run the `sign-macos` job (environment `release`) rebuilds the dm
 electron-builder's own signing (`CSC_LINK`, `CSC_KEY_PASSWORD`) and API-key notarisation, via
 `.github/scripts/sign-macos.sh`, then replaces the unsigned macOS artifact. If the signing secrets are missing,
 a notice is shown and macOS ships unsigned. If they are set and signing or notarisation fails, the job fails,
-unless the repository variable `SQLER_ALLOW_UNSIGNED_FALLBACK` is `true` (then the unsigned build ships with a
+unless the repository variable `ALLOW_UNSIGNED_FALLBACK` is `true` (then the unsigned build ships with a
 warning).
+
+### Update manifest (`update.json`)
+
+`.github/scripts/update-manifest.mjs` (dependency-free, `node:crypto`; the same file and format as agentic-workflow,
+differing only in the artifact pattern) builds and signs the manifest:
+`node update-manifest.mjs sign --tag vX.Y.Z --artifacts DIR --published ISO --key-file FILE --out FILE` and
+`node update-manifest.mjs verify FILE [--public-key FILE] [--artifacts DIR]`.
+
+Format: `{ version, tag, published, artifacts: [{ name, size, sha256 }], publicKey, signature }`. `version` comes from
+the tag (`vX.Y.Z[-pre]`), `artifacts` lists every final `.dmg`, `.exe` and `.AppImage` in the directory sorted by
+name, `publicKey` is the base64 SPKI DER of the signing key and `signature` is base64 Ed25519.
+
+What is signed, precisely: the UTF-8 bytes of `JSON.stringify({ version, tag, published, artifacts, publicKey })`
+(compact, keys in exactly that order, artifact keys in the order `name`, `size`, `sha256`). `signature` itself is not
+signed. The artifacts are covered through their sha256 and size, not by signing the files. `verify` alone proves
+integrity only (the embedded key could be swapped together with the signature); `--public-key` (base64 or PEM SPKI)
+pins the expected publisher, `--artifacts` re-hashes the files.
+
+The key (`UPDATE_SIGNING_KEY`) is an Ed25519 private key as PEM PKCS8, base64 of that PEM, or base64 PKCS8 DER.
+After `sign-macos`, the `update manifest` job (environment `release`, tag runs only) signs `update.json` from the
+final artifacts; `host` attaches it to the Release and checks that it is a release asset. Without the secret the
+notice "no update manifest" is shown and the Release has no `update.json`. The key is visible only to the signing step
+(temp file, `umask 077`, removed by a trap). On pull requests and branch dispatch, `update manifest (dry run)` signs
+with a TEST ONLY key generated in the job and uploads only the Actions artifact `update-manifest-TEST-ONLY`
+(`update.TEST-ONLY.json`), never a release asset. `update-manifest-test.sh` (sign/verify round-trip, tamper
+detection) runs offline in the CI job `Release scripts`. Nothing in the app consumes the manifest yet.
 
 ### Required configuration
 
 - Environment `release` (ideally restricted to tags `v*`).
 - Secrets: `APPLE_CERTIFICATE` (base64 .p12), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_API_KEY` (base64 .p8),
-  `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`.
-- Repository variable `SQLER_ALLOW_UNSIGNED_FALLBACK` (optional).
-- The `SQLER_*` name is kept from the sqler repository on purpose, so both repos share one convention.
+  `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`. Optional: `UPDATE_SIGNING_KEY` (signs `update.json`).
+- Repository variable `ALLOW_UNSIGNED_FALLBACK` (optional).

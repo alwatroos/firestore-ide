@@ -72,3 +72,6 @@ jobs:
 
       - name: Tag release validate tests
         run: sh .github/scripts/tag-release-validate-test.sh
+
+      - name: Update manifest tests
+        run: sh .github/scripts/update-manifest-test.sh

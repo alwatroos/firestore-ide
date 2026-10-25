@@ -13,13 +13,20 @@ name: Release
 #   against the version in package.json.
 # - `sign-macos` runs on `v*` tag runs only, in the environment `release`. It rebuilds the dmg with electron-builder's
 #   own signing (CSC_LINK / CSC_KEY_PASSWORD) and API-key notarisation, then replaces the macOS artifact.
-#   With the secrets set, a failed signing fails the job and nothing publishes (fail closed); only the repository
-#   variable SQLER_ALLOW_UNSIGNED_FALLBACK == 'true' restores warn-and-ship-unsigned.
+#   Without the APPLE_* secrets the macOS dmg ships unsigned, with a notice. If signing was attempted with the secrets
+#   set and fails, the job fails and nothing publishes (fail closed); only the repository variable
+#   ALLOW_UNSIGNED_FALLBACK == 'true' restores warn-and-ship-unsigned for that failure case.
+# - `update manifest` runs on `v*` tag runs only, in the environment `release`, after sign-macos (so it covers the
+#   final artifacts). With the secret UPDATE_SIGNING_KEY it builds and Ed25519-signs `update.json` (version, tag,
+#   published timestamp, and name/size/sha256 of each dmg/exe/AppImage, plus the public key); `host` attaches it to the release.
+#   Without the key the release carries no manifest. `update manifest (dry run)` does the same on pull requests and
+#   branch dispatch with a TEST ONLY key generated in the job: no secret, nothing published.
 on:
   pull_request:
     paths:
       - ".github/workflows/release.yml"
       - ".github/scripts/sign-macos.sh"
+      - ".github/scripts/update-manifest*"
       - "electron-builder.yml"
       - "build/**"
       - "package.json"
@@ -183,7 +190,7 @@ jobs:
       - id: sign
         name: Sign and notarise
         if: steps.secrets.outputs.sign == 'true'
-        continue-on-error: ${{ vars.SQLER_ALLOW_UNSIGNED_FALLBACK == 'true' }}
+        continue-on-error: ${{ vars.ALLOW_UNSIGNED_FALLBACK == 'true' }}
         shell: bash
         env:
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
@@ -197,7 +204,7 @@ jobs:
         if: steps.sign.outcome == 'failure'
         shell: bash
         run: |
-          echo "::warning title=macOS signing failed::the macOS dmg ships unsigned (SQLER_ALLOW_UNSIGNED_FALLBACK)"
+          echo "::warning title=macOS signing failed::the macOS dmg ships unsigned (ALLOW_UNSIGNED_FALLBACK)"
 
       - name: Upload the signed dmg
         if: steps.sign.outcome == 'success'
@@ -208,13 +215,159 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # Update manifest dry run: pull requests and branch dispatch. No environment, no secret: it signs with a TEST ONLY
+  # key generated inside the job. The result is an Actions artifact named TEST-ONLY, never a release asset.
+  manifest-dry-run:
+    name: update manifest (dry run)
+    needs:
+      - plan
+      - build
+      - sign-macos
+    if: ${{ always() && needs.plan.outputs.publishing != 'true' && needs.plan.result == 'success' && needs.build.result == 'success' && (needs.sign-macos.result == 'success' || needs.sign-macos.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Fetch the build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: installers-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/dist
+
+      - name: Build and test-sign the manifest
+        shell: bash
+        run: |
+          umask 077
+          key="$RUNNER_TEMP/test-signing-key"
+          trap 'rm -f "$key"' EXIT
+          node --input-type=module -e "
+          import { generateKeyPairSync } from 'node:crypto';
+          process.stdout.write(generateKeyPairSync('ed25519').privateKey.export({ format: 'pem', type: 'pkcs8' }));
+          " > "$key"
+          out="$RUNNER_TEMP/update-manifest-test"
+          mkdir -p "$out"
+          version="$(jq -r .version package.json)"
+          node .github/scripts/update-manifest.mjs sign --tag "v$version" --artifacts "$RUNNER_TEMP/dist" \
+            --published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --key-file "$key" --out "$out/update.TEST-ONLY.json"
+          node .github/scripts/update-manifest.mjs verify "$out/update.TEST-ONLY.json" --artifacts "$RUNNER_TEMP/dist"
+          echo "::notice title=Update manifest (dry run)::signed with a TEST ONLY key generated in this job; not a release asset"
+
+      - name: Upload the TEST ONLY manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: update-manifest-TEST-ONLY
+          path: ${{ runner.temp }}/update-manifest-test/update.TEST-ONLY.json
+          if-no-files-found: error
+          retention-days: 7
+
+  # Signs the update manifest on a `v*` tag run only, in the environment `release` (deployment rule: tags `v*`),
+  # after sign-macos so it covers the final artifacts. The only job that reads UPDATE_SIGNING_KEY, and only the
+  # signing step sees it. `host` attaches the result to the release when it creates it. Without the secret the
+  # release simply carries no manifest.
+  manifest:
+    name: update manifest
+    needs:
+      - plan
+      - build
+      - sign-macos
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && needs.plan.result == 'success' && needs.build.result == 'success' && needs.sign-macos.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+    outputs:
+      signed: ${{ steps.done.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Fetch the build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: installers-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/dist
+
+      # Only whether the secret exists is exposed to this step, never its value.
+      - id: secret
+        name: Check the update signing key
+        shell: bash
+        env:
+          HAVE_KEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
+        run: |
+          if [ "$HAVE_KEY" = "true" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Update manifest::no UPDATE_SIGNING_KEY; the release carries no update manifest"
+          fi
+
+      - id: sign
+        name: Build and sign the manifest
+        if: steps.secret.outputs.present == 'true'
+        shell: bash
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          umask 077
+          key="$RUNNER_TEMP/update-signing-key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$UPDATE_SIGNING_KEY" > "$key"
+          unset UPDATE_SIGNING_KEY
+          out="$RUNNER_TEMP/update-manifest"
+          mkdir -p "$out"
+          node .github/scripts/update-manifest.mjs sign --tag "$TAG" --artifacts "$RUNNER_TEMP/dist" \
+            --published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --key-file "$key" --out "$out/update.json"
+
+      # Independent check of the file that will be uploaded, against the artifacts it lists.
+      - name: Verify the signed manifest
+        if: steps.secret.outputs.present == 'true'
+        shell: bash
+        run: node .github/scripts/update-manifest.mjs verify "$RUNNER_TEMP/update-manifest/update.json" --artifacts "$RUNNER_TEMP/dist"
+
+      - name: Upload the signed manifest
+        if: steps.secret.outputs.present == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: update-manifest
+          path: ${{ runner.temp }}/update-manifest/update.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - id: done
+        name: Report
+        shell: bash
+        env:
+          PRESENT: ${{ steps.secret.outputs.present }}
+        run: echo "signed=$PRESENT" >> "$GITHUB_OUTPUT"
+
   host:
     name: host
     needs:
       - plan
       - build
       - sign-macos
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && needs.plan.result == 'success' && needs.build.result == 'success' && needs.sign-macos.result == 'success' }}
+      - manifest
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && needs.plan.result == 'success' && needs.build.result == 'success' && needs.sign-macos.result == 'success' && needs.manifest.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -229,6 +382,15 @@ jobs:
           merge-multiple: true
           path: installers
 
+      # The signed manifest is part of the release from the moment it is created. Its artifact name does not match
+      # `installers-*`, so it is fetched on its own.
+      - name: Fetch the signed update manifest
+        if: needs.manifest.outputs.signed == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: update-manifest
+          path: installers
+
       - name: Create the GitHub Release
         shell: bash
         env:
@@ -238,3 +400,10 @@ jobs:
           case "$TAG" in *-*) PRERELEASE=--prerelease ;; esac
           # shellcheck disable=SC2086
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes $PRERELEASE installers/*
+
+      - name: Check the update manifest is a release asset
+        if: needs.manifest.outputs.signed == 'true'
+        shell: bash
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -qx update.json
