@@ -55,7 +55,14 @@ info=$(codesign -dv --verbose=2 "$app" 2>&1) || die "codesign -dv failed"
 printf '%s\n' "$info" | grep -Eq 'flags=0x[0-9a-f]+\(.*runtime' || die "hardened runtime flag missing"
 printf '%s\n' "$info" | grep -q 'Authority=Developer ID Application' || die "not signed with a Developer ID Application identity"
 if [ "$notarise" = yes ]; then
-    xcrun stapler validate "$app" || die "stapler validation failed"
+    # stapler validate asks Apple's CloudKit, which drops connections from the runners now and then: retry.
+    tries=0
+    until xcrun stapler validate "$app"; do
+        tries=$((tries + 1))
+        [ "$tries" -lt 5 ] || die "stapler validation failed"
+        echo "sign-macos: stapler validate failed (attempt $tries of 5), retrying in 30s"
+        sleep 30
+    done
 fi
 
 echo "sign-macos: ok ($(basename "$dmg"), notarised: $notarise)"
