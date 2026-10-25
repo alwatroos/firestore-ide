@@ -118,68 +118,74 @@ testing pure functions. Run `pnpm test` (and `pnpm typecheck`) before committing
 
 ## Releases (CI/CD)
 
-Releases are **manual only** — triggered by a human from the GitHub Actions UI.
-There are two paths, both of which end with a tag, a GitHub Release, and built
-installers (`.AppImage` / `.exe` / `.dmg`) attached to the release.
+Releases are **owner-run** from the GitHub Actions UI. A release is a `vX.Y.Z` tag on `main`, a GitHub
+Release, and installers (`.AppImage` / `.exe` / `.dmg`) built by `release.yml`.
 
 ### Branch model
 
-```
-develop  ──────────────────────────────────────────────►
-              │                                 ▲
-              └─ RELEASE/X.Y.0 ──► main ────────┘  (back-merge)
-main     ──────────────────────────────────────────────►
-              ▲                        │ ▲
-              │  HOTFIX/X.Y.Z ─────────┘ │
-              └───────────────────────────┘  (back-merge to develop)
-```
+Work happens on `develop` and reaches `main` through a pull request. The version in `package.json` is
+bumped in that PR; the release tag must match it.
 
-### Regular release (`release-regular.yml`) — minor bump
+### Steps
 
-Trigger: **Actions → "Release – Regular (minor bump)" → Run workflow**
+1. Merge the `develop` → `main` PR (with the version bump in `package.json`).
+2. Wait for the CI **push** run on `main` to go green (`ci.yml` runs on pushes to `main`).
+3. Actions → **Release** → Run workflow on `main` (a dry run: builds unsigned installers on all three OSes).
+4. Actions → **Tag release** → Run workflow on `main` with `version` (`X.Y.Z`, no `v`), `sha` (empty means the head
+   of `main`) and `confirm` = `release vX.Y.Z`.
+5. Tag release validates, creates the tag through the API and dispatches `release.yml` on the tag. That run
+   builds, signs macOS, and creates the GitHub Release.
 
-1. Checks out `develop`.
-2. Bumps the **minor** version (`X.Y.Z → X.(Y+1).0`) in `package.json`.
-3. Creates `RELEASE/X.(Y+1).0` from `develop`, commits the bump, pushes.
-4. Merges `RELEASE/…` into `main` using a merge commit (no squash/rebase).
-5. Tags `vX.(Y+1).0` on `main` and pushes the tag.
-6. Back-merges `main` into `develop` so the version bump propagates.
-7. Deletes the `RELEASE/…` branch.
-8. Creates a GitHub Release with auto-generated notes.
-9. **Build** job (matrix: ubuntu / windows / macos) runs `pnpm dist` and
-   attaches installers to the release.
+`tag-release-validate.sh` fails closed unless: it runs on `main`; the version is semver and equals `package.json`
+at the commit; the commit is on `main`; the tag does not exist; `release.yml` at the commit has the
+`# tag-dispatch:` marker; the latest Release dry run on `main` and a CI push run on `main` both succeeded for
+exactly that commit. Scripts live in `.github/scripts/` and are tested offline in the CI job `Release scripts`.
 
-### Fix release (`release-fix.yml` + `release-hotfix-merge.yml`) — patch bump
+### What publishes
 
-**Step 1 — create the hotfix branch:**
-Trigger: **Actions → "Release – Fix (patch bump) – Create Hotfix" → Run workflow**
+Only a `v*` tag run (or a `workflow_dispatch` on a `refs/tags/v*` ref) publishes. Pull-request and branch runs
+build unsigned installers and publish nothing. The `host` job creates the Release with `gh release create
+--generate-notes`; a tag containing `-` (e.g. `v1.2.0-rc.1`) is marked as a pre-release. electron-builder runs
+with `publish: null`.
 
-1. Bumps the **patch** version (`X.Y.Z → X.Y.(Z+1)`) in `package.json` on `main`.
-2. Creates `HOTFIX/X.Y.(Z+1)` from `main`, commits the bump, pushes.
-3. Opens a PR `HOTFIX/… → main` automatically.
+### macOS signing and notarisation
 
-**Step 2 — apply the fix and release:**
+On a publishing run the `sign-macos` job (environment `release`) rebuilds the dmg with `pnpm dist` using
+electron-builder's own signing (`CSC_LINK`, `CSC_KEY_PASSWORD`) and API-key notarisation, via
+`.github/scripts/sign-macos.sh`, then replaces the unsigned macOS artifact. If the signing secrets are missing,
+a notice is shown and macOS ships unsigned. If they are set and signing or notarisation fails, the job fails,
+unless the repository variable `ALLOW_UNSIGNED_FALLBACK` is `true` (then the unsigned build ships with a
+warning).
 
-4. Developer pushes fix commits onto the `HOTFIX/…` branch.
-5. Developer clicks **"Merge pull request"** on GitHub.
-6. `release-hotfix-merge.yml` fires automatically:
-   - Tags `vX.Y.(Z+1)` on `main`.
-   - Back-merges `main` into `develop`.
-   - Deletes the `HOTFIX/…` branch.
-   - Creates a GitHub Release with auto-generated notes.
-   - **Build** job builds and attaches installers.
+### Update manifest (`update.json`)
 
-### Notes
+`.github/scripts/update-manifest.mjs` (dependency-free, `node:crypto`; the same file and format as agentic-workflow,
+differing only in the artifact pattern) builds and signs the manifest:
+`node update-manifest.mjs sign --tag vX.Y.Z --artifacts DIR --published ISO --key-file FILE --out FILE` and
+`node update-manifest.mjs verify FILE [--public-key FILE] [--artifacts DIR]`.
 
-- Builds are **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`); add signing
-  secrets and config when distribution requires it.
-- electron-builder runs with `publish: null`; release assets are uploaded by the
-  workflow (`softprops/action-gh-release`), not by electron-builder.
-- **`secrets.RELEASE_PAT` is required.** The `develop` branch ruleset blocks
-  direct pushes without Maintain+ access. Create a classic PAT (`repo` scope) from
-  the repo owner's account and store it in the repository secret `RELEASE_PAT`.
-  Without it, back-merge steps fail with "Changes must be made through a pull
-  request." The workflows fall back to `GITHUB_TOKEN` if the secret is absent,
-  which works only when the develop ruleset is not yet enforced.
-- Back-merge steps will fail if `main` and `develop` have diverged with conflicts;
-  resolve manually and re-run the failed job.
+Format: `{ version, tag, published, artifacts: [{ name, size, sha256 }], publicKey, signature }`. `version` comes from
+the tag (`vX.Y.Z[-pre]`), `artifacts` lists every final `.dmg`, `.exe` and `.AppImage` in the directory sorted by
+name, `publicKey` is the base64 SPKI DER of the signing key and `signature` is base64 Ed25519.
+
+What is signed, precisely: the UTF-8 bytes of `JSON.stringify({ version, tag, published, artifacts, publicKey })`
+(compact, keys in exactly that order, artifact keys in the order `name`, `size`, `sha256`). `signature` itself is not
+signed. The artifacts are covered through their sha256 and size, not by signing the files. `verify` alone proves
+integrity only (the embedded key could be swapped together with the signature); `--public-key` (base64 or PEM SPKI)
+pins the expected publisher, `--artifacts` re-hashes the files.
+
+The key (`UPDATE_SIGNING_KEY`) is an Ed25519 private key as PEM PKCS8, base64 of that PEM, or base64 PKCS8 DER.
+After `sign-macos`, the `update manifest` job (environment `release`, tag runs only) signs `update.json` from the
+final artifacts; `host` attaches it to the Release and checks that it is a release asset. Without the secret the
+notice "no update manifest" is shown and the Release has no `update.json`. The key is visible only to the signing step
+(temp file, `umask 077`, removed by a trap). On pull requests and branch dispatch, `update manifest (dry run)` signs
+with a TEST ONLY key generated in the job and uploads only the Actions artifact `update-manifest-TEST-ONLY`
+(`update.TEST-ONLY.json`), never a release asset. `update-manifest-test.sh` (sign/verify round-trip, tamper
+detection) runs offline in the CI job `Release scripts`. Nothing in the app consumes the manifest yet.
+
+### Required configuration
+
+- Environment `release` (ideally restricted to tags `v*`).
+- Secrets: `APPLE_CERTIFICATE_P12_BASE64` (base64 .p12), `APPLE_CERTIFICATE_PASSWORD`,
+  `APPLE_API_KEY_P8_BASE64` (base64 .p8), `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`. Optional: `UPDATE_SIGNING_KEY` (signs `update.json`).
+- Repository variable `ALLOW_UNSIGNED_FALLBACK` (optional).
