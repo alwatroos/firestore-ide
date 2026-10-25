@@ -13,7 +13,7 @@
     <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"/>
   </a>
   <a href="https://github.com/alwatroos/firestore-ide/actions">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/alwatroos/firestore-ide/release-regular.yml?style=flat-square&label=CI"/>
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/alwatroos/firestore-ide/ci.yml?style=flat-square&label=CI"/>
   </a>
 </p>
 
@@ -45,7 +45,7 @@ Pre-built installers are attached to every [GitHub Release](https://github.com/a
 | Windows | `.exe` |
 | Linux | `.AppImage` |
 
-> **Note:** Builds are currently unsigned. macOS will warn you on first launch — right-click the app and choose **Open** to bypass Gatekeeper.
+> **Note:** macOS builds are signed and notarised when the Apple signing secrets are configured for the release, and unsigned otherwise. An unsigned build makes macOS warn you on first launch — right-click the app and choose **Open** to bypass Gatekeeper.
 
 ## Getting started (from source)
 

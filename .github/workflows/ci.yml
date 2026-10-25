@@ -1,15 +1,19 @@
 name: CI
 
-# Runs on every pull request targeting main or develop. All jobs must pass before
-# the PR can be merged (configured as required status checks in branch rulesets).
+# Runs on every pull request targeting main or develop, and on every push to main. All jobs must
+# pass before a PR can be merged (configured as required status checks in branch rulesets). The
+# push run on main is the CI gate that "Tag release" checks for the exact commit being tagged, so
+# it is never cancelled.
 
 on:
   pull_request:
     branches: [main, develop]
+  push:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint:
@@ -56,3 +60,15 @@ jobs:
 
       - name: Tests
         run: pnpm test
+
+  release-scripts:
+    name: Release scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tag release pre-check tests
+        run: sh .github/scripts/tag-release-precheck-test.sh
+
+      - name: Tag release validate tests
+        run: sh .github/scripts/tag-release-validate-test.sh
